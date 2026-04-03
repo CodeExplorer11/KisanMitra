@@ -1,0 +1,9 @@
+streamlit
+google-generativeai
+gtts
+speechrecognition
+pyttsx3
+requests
+pillow
+python-dotenv
+pygame
