@@ -1,43 +1,75 @@
 import streamlit as st
 import requests
 import google.generativeai as genai
-import os
-from dotenv import load_dotenv
 import io
 import speech_recognition as sr
 from PIL import Image
 import datetime
 import PyPDF2
 
+# ========== PAGE CONFIG (MUST BE FIRST) ==========
+st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
+
 # ========== LOAD API KEYS ==========
-# Load from .env for local testing
-load_dotenv()
-# For Streamlit Cloud, this will be overridden by st.secrets
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Try multiple methods to get the API key
+GEMINI_API_KEY = None
 
-# If running on Streamlit Cloud, use st.secrets
+# Method 1: Streamlit Cloud Secrets
 try:
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    if "GEMINI_API_KEY" in st.secrets:
+        GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+        st.success("✅ API key loaded from Streamlit Secrets")
 except:
-    # Fallback to .env for local testing
-    from dotenv import load_dotenv
-    import os
-    load_dotenv()
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    pass
 
-# ========== CONFIGURE GEMINI ==========
+# Method 2: Environment variable (local testing)
+if not GEMINI_API_KEY:
+    try:
+        from dotenv import load_dotenv
+        import os
+        load_dotenv()
+        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+        if GEMINI_API_KEY:
+            st.info("📝 API key loaded from .env file")
+    except:
+        pass
+
+# Method 3: Hardcoded for testing (REMOVE AFTER FIXING)
+# ONLY use this temporarily to test if key works
+if not GEMINI_API_KEY:
+    # PASTE YOUR ACTUAL KEY HERE TEMPORARILY
+    GEMINI_API_KEY = "AIzaSyDHwdkIGSUSZM2ZVSgd8UK5vH-KT1139CM"  # <-- REPLACE WITH YOUR REAL KEY
+
+# ========== VALIDATE API KEY ==========
 if not GEMINI_API_KEY:
     st.error("❌ Gemini API key missing. Please add GEMINI_API_KEY to Streamlit Secrets.")
     st.stop()
 
+# Remove quotes if accidentally included
+GEMINI_API_KEY = GEMINI_API_KEY.strip().strip('"').strip("'")
+
+# ========== CONFIGURE GEMINI ==========
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
-    vision_model = genai.GenerativeModel('gemini-pro-vision')
-    st.success("✅ Gemini API connected successfully!")  # This will confirm it works
+    
+    # Test the API key with a simple call
+    test_model = genai.GenerativeModel('gemini-pro')
+    test_response = test_model.generate_content("Say 'API key works'")
+    
+    if test_response and test_response.text:
+        st.success("✅ Gemini API connected successfully!")
+        model = genai.GenerativeModel('gemini-pro')
+        vision_model = genai.GenerativeModel('gemini-pro-vision')
+    else:
+        st.error("❌ API key validation failed. Key may be invalid.")
+        st.stop()
+        
 except Exception as e:
     st.error(f"❌ Gemini configuration failed: {e}")
+    st.info("💡 Tip: Make sure your API key is correct and has no extra spaces.")
     st.stop()
+
+# Rest of your app continues here...
 
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
