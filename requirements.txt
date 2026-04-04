@@ -1,5 +1,5 @@
 streamlit
 google-generativeai
 python-dotenv
-requests
-pillow
+SpeechRecognition
+pydub
