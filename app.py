@@ -51,8 +51,8 @@ try:
     #         st.write(m.name)
     
     # Use the correct model names (updated from gemini-pro)
-    model = genai.GenerativeModel('models/gemini-1.5-flash')
-    vision_model = genai.GenerativeModel('models/gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash')
+    vision_model = genai.GenerativeModel('gemini-2.0-flash')
     
     # Test the API key with a simple call
     test_response = model.generate_content("Say 'API key works'")
