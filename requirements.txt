@@ -1,9 +1,5 @@
 streamlit
 google-generativeai
-gtts
-speechrecognition
-pyttsx3
+python-dotenv
 requests
 pillow
-python-dotenv
-pygame

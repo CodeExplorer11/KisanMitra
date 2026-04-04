@@ -1,40 +1,34 @@
-"""
-KisanMitra - Voice-Based Digital Field Companion
-Complete working version with Gemini AI
-"""
-
 import streamlit as st
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
-import speech_recognition as sr
-import pyttsx3
-import tempfile
-import pygame
+import requests
+from PIL import Image
+import io
 
-# Load API keys
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-pro')
+    vision_model = genai.GenerativeModel('gemini-pro-vision')
 else:
-    st.error("⚠️ Gemini API key not found! Please add it to .env file")
+    st.error("⚠️ Gemini API key missing. Add it in Secrets.")
     model = None
+    vision_model = None
 
-# Page config
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="centered")
 
-# Custom CSS for mobile feel
+# Custom CSS for mobile
 st.markdown("""
 <style>
     .stButton > button {
         width: 100%;
         background-color: #4CAF50;
         color: white;
-        font-size: 20px;
-        padding: 15px;
+        font-size: 18px;
+        padding: 12px;
         border-radius: 50px;
     }
     .response-box {
@@ -44,125 +38,147 @@ st.markdown("""
         margin: 10px 0;
         border-left: 5px solid #2e7d32;
     }
-    h1 {
-        text-align: center;
-        color: #2e7d32;
+    .query-box {
+        background-color: #e3f2fd;
+        padding: 12px;
+        border-radius: 12px;
+        margin: 10px 0;
     }
+    h1 { text-align: center; color: #2e7d32; }
+    .stRadio > div { justify-content: center; }
 </style>
 """, unsafe_allow_html=True)
 
-# Title
-st.title("🌾 KisanMitra")
-st.caption("आपका वॉइस डिजिटल साथी | Your Voice Farming Companion")
-
-# Language selector
+# Language selection
 lang = st.radio("भाषा / Language", ["हिंदी", "English"], horizontal=True)
 is_hindi = lang == "हिंदी"
 
-# Initialize speech components
-@st.cache_resource
-def init_tts():
-    engine = pyttsx3.init()
-    engine.setProperty('rate', 150)
-    return engine
-
-def speak(text):
-    try:
-        engine = init_tts()
-        engine.say(text)
-        engine.runAndWait()
-    except:
-        st.warning("🔊 Audio not available, but text is shown below.")
-
-def listen():
-    try:
-        r = sr.Recognizer()
-        with sr.Microphone() as source:
-            st.info("🎤 सुन रहा हूँ... Speak now...")
-            r.adjust_for_ambient_noise(source, duration=0.5)
-            audio = r.listen(source, timeout=5, phrase_time_limit=10)
-        
-        if is_hindi:
-            text = r.recognize_google(audio, language="hi-IN")
-        else:
-            text = r.recognize_google(audio, language="en-IN")
-        return text
-    except sr.WaitTimeoutError:
-        st.warning("⏰ समय समाप्त। कृपया फिर से बोलें।")
-        return None
-    except sr.UnknownValueError:
-        st.warning("🤔 सुनाई नहीं दिया। कृपया स्पष्ट बोलें।")
-        return None
-    except Exception as e:
-        st.error(f"❌ त्रुटि: {str(e)}")
-        return None
-
+# ---------- Helper: Get AI response ----------
 def get_ai_response(question):
     if not model:
-        return "⚠️ AI model not configured. Please check API key."
-    
+        return "⚠️ AI not configured. Please check API key."
     prompt = f"""You are KisanMitra, a helpful farming assistant for Indian farmers.
-    Language: {'Hindi' if is_hindi else 'English'}
-    Farmer's question: {question}
-    
-    Give a short, practical, actionable answer (max 3 sentences). Include specific advice.
-    If in Hindi, use simple Hindi or Hinglish."""
-    
+Language: {'Hindi' if is_hindi else 'English'}.
+Farmer's question: {question}
+Give a short, practical, actionable answer (max 3 sentences). Include specific advice if possible."""
     try:
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"⚠️ Error: {str(e)[:100]}. Please try again."
+        return f"⚠️ Error: {str(e)[:100]}"
 
-# Voice input button
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    if st.button("🎙️ बोलें / Speak", use_container_width=True):
-        user_query = listen()
-        
-        if user_query:
-            st.markdown(f"""
-            <div style="background-color:#e3f2fd; padding:12px; border-radius:12px; margin:10px 0;">
-                <strong>🗣️ आपने पूछा:</strong> {user_query}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            with st.spinner("🤔 सोच रहा हूँ..."):
-                response = get_ai_response(user_query)
-            
-            st.markdown(f"""
-            <div class="response-box">
-                <strong>🤖 KisanMitra:</strong><br>
-                {response}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            speak(response)
+# ---------- Voice Input (JavaScript) ----------
+voice_html = f"""
+<div id="voice-container" style="text-align:center; margin-bottom:20px;">
+    <button id="mic-btn" style="background-color:#4CAF50; color:white; font-size:24px; padding:15px 30px; border:none; border-radius:50px; cursor:pointer;">🎤 बोलें / Speak</button>
+    <p id="status" style="margin-top:10px; color:#555;">Tap and speak</p>
+</div>
+<script>
+    const micBtn = document.getElementById('mic-btn');
+    const statusDiv = document.getElementById('status');
+    let recognition = null;
+    function startRecognition() {{
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {{
+            statusDiv.innerText = "Your browser does not support voice input.";
+            return;
+        }}
+        recognition = new SpeechRecognition();
+        recognition.lang = '{'hi-IN' if is_hindi else 'en-US'}';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.onstart = function() {{
+            statusDiv.innerText = "🎙️ Listening... सुन रहा हूँ...";
+            micBtn.style.backgroundColor = "#ff5722";
+        }};
+        recognition.onresult = function(event) {{
+            const text = event.results[0][0].transcript;
+            statusDiv.innerText = "✅ Recognized: " + text;
+            // Send to Streamlit via form
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '';
+            const input = document.createElement('input');
+            input.name = 'voice_query';
+            input.value = text;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }};
+        recognition.onerror = function(event) {{
+            statusDiv.innerText = "❌ Error: " + event.error;
+            micBtn.style.backgroundColor = "#4CAF50";
+        }};
+        recognition.onend = function() {{
+            micBtn.style.backgroundColor = "#4CAF50";
+            if (statusDiv.innerText !== "✅ Recognized") {{
+                statusDiv.innerText = "Tap and speak again";
+            }}
+        }};
+        recognition.start();
+    }}
+    micBtn.addEventListener('click', startRecognition);
+</script>
+"""
+
+# Display voice component
+st.components.v1.html(voice_html, height=120)
+
+# Handle voice query submitted via form
+if "voice_query" in st.query_params:
+    user_query = st.query_params["voice_query"]
+    if user_query:
+        st.markdown(f'<div class="query-box">🗣️ <strong>{"आपने पूछा" if is_hindi else "You asked"}:</strong> {user_query}</div>', unsafe_allow_html=True)
+        with st.spinner("🤔 सोच रहा हूँ..."):
+            answer = get_ai_response(user_query)
+        st.markdown(f'<div class="response-box">🤖 <strong>KisanMitra:</strong><br>{answer}</div>', unsafe_allow_html=True)
+        # Speak answer via browser TTS
+        speak_js = f"""
+        <script>
+            var utterance = new SpeechSynthesisUtterance({answer});
+            utterance.lang = '{'hi-IN' if is_hindi else 'en-US'}';
+            window.speechSynthesis.speak(utterance);
+        </script>
+        """
+        st.components.v1.html(speak_js, height=0)
 
 # Quick questions
 st.markdown("---")
 st.subheader("⚡ त्वरित प्रश्न")
-
 quick_qs = [
     "गेहूं में कितना पानी दें?",
     "सरसों का भाव क्या है?",
     "टमाटर में रोग कैसे ठीक करें?",
     "आज मौसम कैसा रहेगा?"
 ]
-
 cols = st.columns(2)
 for i, q in enumerate(quick_qs):
-    with cols[i % 2]:
+    with cols[i%2]:
         if st.button(q, use_container_width=True):
-            with st.spinner("🤔..."):
-                response = get_ai_response(q)
-            st.markdown(f"""
-            <div class="response-box">
-                <strong>🤖 उत्तर:</strong><br>
-                {response}
-            </div>
-            """, unsafe_allow_html=True)
-            speak(response)
+            answer = get_ai_response(q)
+            st.markdown(f'<div class="response-box">🤖 <strong>उत्तर:</strong><br>{answer}</div>', unsafe_allow_html=True)
+            st.components.v1.html(f'<script>var u = new SpeechSynthesisUtterance("{answer}"); u.lang = "{'hi-IN' if is_hindi else 'en-US'}"; window.speechSynthesis.speak(u);</script>', height=0)
+
+# ---------- Disease Detection Page (simple inline) ----------
+st.markdown("---")
+st.subheader("🔬 फसल रोग पहचान | Crop Disease Detection")
+uploaded_file = st.file_uploader("तस्वीर लें / Upload photo", type=["jpg", "jpeg", "png"])
+if uploaded_file and vision_model:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded", width=200)
+    if st.button("रोग की पहचान करें"):
+        with st.spinner("विश्लेषण..."):
+            prompt = "Analyze this crop image. Tell disease (if any), treatment, organic solution. Keep short."
+            response = vision_model.generate_content([prompt, image])
+            st.markdown(f'<div class="response-box">🔍 <strong>निदान / Diagnosis:</strong><br>{response.text}</div>', unsafe_allow_html=True)
+
+# ---------- Weather (simple mock, can add API later) ----------
+st.markdown("---")
+st.subheader("🌤️ मौसम जानकारी | Weather")
+if st.button("आज का मौसम / Today's Weather"):
+    # Use OpenWeatherMap if you have key, else mock
+    weather_text = "आज तापमान 28°C, हल्की धूप। खेत में काम कर सकते हैं।" if is_hindi else "Today 28°C, partly sunny. Suitable for farming."
+    st.info(weather_text)
 
 # Footer
 st.markdown("---")
