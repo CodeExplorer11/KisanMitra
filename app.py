@@ -17,7 +17,6 @@ else:
     st.error("⚠️ Gemini API key missing. Add it in Secrets.")
     model = None
     vision_model = None
-
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="centered")
 
 # Custom CSS for mobile
