@@ -196,6 +196,15 @@ st.markdown("""
     .stTabs [aria-selected="true"] { background-color: #ff8c00; color: white; }
 </style>
 """, unsafe_allow_html=True)
+# Auto-speak the answer using browser TTS
+speak_js = f"""
+<script>
+    var utterance = new SpeechSynthesisUtterance({ans});
+    utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+    window.speechSynthesis.speak(utterance);
+</script>
+"""
+st.components.v1.html(speak_js, height=0)
 
 # ========== SIDEBAR ==========
 with st.sidebar:
@@ -321,8 +330,19 @@ with tab1:
                 ans = get_ai_response(text, st.session_state.lang_pref)
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": text, "a": ans})
+            
+            # Auto-speak the answer
+            speak_js = f"""
+            <script>
+                var utterance = new SpeechSynthesisUtterance({ans});
+                utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+                window.speechSynthesis.speak(utterance);
+            </script>
+            """
+            st.components.v1.html(speak_js, height=0)
         else:
             st.error(t("voice_error"))
+    
     st.divider()
     st.subheader(t("voice_type_header"))
     txt_q = st.text_input(t("voice_type_placeholder"))
@@ -332,7 +352,16 @@ with tab1:
             st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {txt_q}</div>', unsafe_allow_html=True)
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": txt_q, "a": ans})
-
+            
+            # Auto-speak the answer
+            speak_js = f"""
+            <script>
+                var utterance = new SpeechSynthesisUtterance({ans});
+                utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+                window.speechSynthesis.speak(utterance);
+            </script>
+            """
+            st.components.v1.html(speak_js, height=0)
 # ----- TAB 2: MARKET PRICES -----
 with tab2:
     st.header(t("market_header"))
