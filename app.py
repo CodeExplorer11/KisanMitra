@@ -41,20 +41,15 @@ if not GEMINI_API_KEY:
 # Clean the key
 GEMINI_API_KEY = GEMINI_API_KEY.strip().strip('"').strip("'")
 
-# ========== CONFIGURE GEMINI (UPDATED MODEL NAMES) ==========
+# ========== CONFIGURE GEMINI (CORRECT MODEL NAMES) ==========
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     
-    # List available models to verify (optional, for debugging)
-    # for m in genai.list_models():
-    #     if 'generateContent' in m.supported_generation_methods:
-    #         st.write(m.name)
+    # Use the correct model names (gemini-1.5-flash works and is free)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    vision_model = genai.GenerativeModel('gemini-1.5-flash')
     
-    # Use the correct model names (updated from gemini-pro)
-    model = genai.GenerativeModel('gemini-2.0-flash')
-    vision_model = genai.GenerativeModel('gemini-2.0-flash')
-    
-    # Test the API key with a simple call
+    # Test the API key
     test_response = model.generate_content("Say 'API key works'")
     
     if test_response and test_response.text:
