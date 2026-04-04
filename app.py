@@ -221,6 +221,85 @@ with st.sidebar:
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
 # ========== HELPER FUNCTIONS ==========
+# ----- HELPER CHATBOT -----
+def get_help_response(user_question):
+    """Answer questions about using the app"""
+    help_topics = {
+        "gps": "To use GPS: Tap 'Use My Current Location' button. Allow location permission when browser asks.",
+        "voice": "Tap the microphone button, speak clearly in Hindi or English, then wait for AI response.",
+        "soil": "Upload a photo of your soil or a PDF lab report. AI will analyze and give advice.",
+        "crop rotation": "Go to Crop Rotation tab. Select previous and next crop to get advice.",
+        "weather": "Enter city name or use GPS. Get today + tomorrow forecast with farming tips."
+    }
+    
+    q_lower = user_question.lower()
+    for key, answer in help_topics.items():
+        if key in q_lower:
+            return answer
+    return "I can help with: GPS usage, voice commands, soil analysis, crop rotation, and weather. What would you like to know?"
+
+# Add a Help button in sidebar or as a new tab
+with st.sidebar:
+    # ... existing sidebar code ...
+    st.markdown("---")
+    st.subheader("🆘 Need Help?")
+    help_q = st.text_input("Ask how to use...")
+    if help_q:
+        help_ans = get_help_response(help_q)
+        st.info(help_ans)
+# For GPS location (works in mobile browser)
+GPS_HTML = """
+<div id="gps-container">
+    <button id="get-location" style="background-color:#4CAF50; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">
+        📍 Use My Current Location
+    </button>
+    <p id="location-status" style="margin-top:10px; color:#666;"></p>
+</div>
+<script>
+    const btn = document.getElementById('get-location');
+    const status = document.getElementById('location-status');
+    
+    btn.addEventListener('click', function() {
+        if ('geolocation' in navigator) {
+            status.innerHTML = "📍 Getting your location...";
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                status.innerHTML = "✅ Location captured! City detected.";
+                // Send to Streamlit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '';
+                const latInput = document.createElement('input');
+                latInput.name = 'latitude';
+                latInput.value = lat;
+                const lonInput = document.createElement('input');
+                lonInput.name = 'longitude';
+                lonInput.value = lon;
+                form.appendChild(latInput);
+                form.appendChild(lonInput);
+                document.body.appendChild(form);
+                form.submit();
+            }, function(error) {
+                status.innerHTML = "❌ Could not get location. Please allow permission.";
+            });
+        } else {
+            status.innerHTML = "❌ GPS not supported on this browser.";
+        }
+    });
+</script>
+"""
+
+def get_city_from_coords(lat, lon):
+    """Convert coordinates to city name (reverse geocoding)"""
+    try:
+        # Using OpenStreetMap Nominatim (free, no key)
+        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
+        response = requests.get(url, headers={'User-Agent': 'KisanMitra'})
+        data = response.json()
+        return data.get('address', {}).get('city', data.get('address', {}).get('town', 'Your Location'))
+    except:
+        return "Your Location"
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -243,6 +322,39 @@ Give a short, practical, actionable answer (max 3 sentences)."""
 
 def get_weather(city):
     return {"temp": 28, "humidity": 65, "description": "clear sky", "city": city}
+def get_weather_forecast(city):
+    """Get today + tomorrow's weather with farming advice"""
+    # For demo, return structured data
+    # With real API key, you'd call OpenWeatherMap forecast endpoint
+    return {
+        "today": {
+            "temp": 32,
+            "humidity": 65,
+            "condition": "Sunny",
+            "suitable": True,
+            "advice": "Good day for sowing and fertilizer application."
+        },
+        "tomorrow": {
+            "temp": 28,
+            "humidity": 80,
+            "condition": "Light rain expected",
+            "suitable": False,
+            "advice": "Avoid spraying pesticides. Cover harvested crops. Postpone irrigation."
+        }
+    }
+
+def get_farming_advice_for_weather(weather_data):
+    """Generate specific advice based on weather conditions"""
+    advice = []
+    if weather_data["temp"] > 35:
+        advice.append("🌡️ High heat: Water crops in early morning or evening.")
+    if weather_data["humidity"] > 75:
+        advice.append("💧 High humidity risk: Watch for fungal diseases.")
+    if "rain" in weather_data["condition"].lower():
+        advice.append("☔ Rain expected: Harvest ripe crops today. Cover stored produce.")
+    if weather_data["temp"] < 15:
+        advice.append("❄️ Cold alert: Protect young plants with mulch.")
+    return advice if advice else ["✅ Weather is suitable for normal farming activities."]
 
 def get_mandi_price(commodity, state="Uttar Pradesh"):
     mock_prices = {
@@ -297,9 +409,110 @@ def get_personalized_advice(profile, question):
         return model.generate_content(prompt).text
     except:
         return "AI temporarily unavailable."
+# Crop rotation data (can be expanded)
+CROP_ROTATION = {
+    "sugarcane": {
+        "next_crops": ["wheat", "mustard", "potato"],
+        "advice": "Sugarcane depletes nitrogen. Grow wheat or mustard with extra nitrogen fertilizer.",
+        "soil_condition": "Phosphorus levels are adequate. Add 20% more nitrogen."
+    },
+    "wheat": {
+        "next_crops": ["rice", "maize", "pulses"],
+        "advice": "Wheat leaves residual phosphorus. Good for legumes like chickpea.",
+        "soil_condition": "Phosphorus is sufficient. Reduce DAP by 25%."
+    },
+    "rice": {
+        "next_crops": ["wheat", "mustard", "vegetables"],
+        "advice": "Rice depletes zinc. Apply zinc sulfate before next crop.",
+        "soil_condition": "Zinc deficiency likely. Add organic matter."
+    },
+    "potato": {
+        "next_crops": ["maize", "onion", "cabbage"],
+        "advice": "Potato depletes potassium. Add potash for next crop.",
+        "soil_condition": "Potassium low. Use NPK 20:20:20."
+    },
+    "tomato": {
+        "next_crops": ["beans", "peas", "cucumber"],
+        "advice": "Tomato susceptible to same pests. Rotate with legumes.",
+        "soil_condition": "Good for nitrogen-fixing crops."
+    }
+}
 
+def get_crop_rotation_advice(previous_crop, next_crop):
+    """Get advice for crop rotation"""
+    prev = previous_crop.lower()
+    next_c = next_crop.lower()
+    
+    if prev in CROP_ROTATION:
+        if next_c in CROP_ROTATION[prev]["next_crops"]:
+            return {
+                "suitable": True,
+                "advice": CROP_ROTATION[prev]["advice"],
+                "soil": CROP_ROTATION[prev]["soil_condition"]
+            }
+        else:
+            return {
+                "suitable": False,
+                "advice": f"{previous_crop} to {next_crop} is not ideal. Recommended: {', '.join(CROP_ROTATION[prev]['next_crops'])}",
+                "soil": "Consider soil testing before planting."
+            }
+    return {"suitable": True, "advice": "Crop rotation is good for soil health.", "soil": "Add compost before sowing."}
+# ========== GPS & LOCATION ==========
+GPS_HTML = """
+<div id="gps-container" style="margin: 10px 0;">
+    <button id="get-location" style="background-color:#4CAF50; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; width:100%;">
+        📍 Use My Current Location
+    </button>
+    <p id="location-status" style="margin-top:10px; color:#666; text-align:center;"></p>
+</div>
+<script>
+    const btn = document.getElementById('get-location');
+    const status = document.getElementById('location-status');
+    
+    btn.addEventListener('click', function() {
+        if ('geolocation' in navigator) {
+            status.innerHTML = "📍 Getting your location...";
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                status.innerHTML = "✅ Location captured! Getting weather...";
+                // Send to Streamlit via form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '';
+                const latInput = document.createElement('input');
+                latInput.name = 'latitude';
+                latInput.value = lat;
+                const lonInput = document.createElement('input');
+                lonInput.name = 'longitude';
+                lonInput.value = lon;
+                form.appendChild(latInput);
+                form.appendChild(lonInput);
+                document.body.appendChild(form);
+                form.submit();
+            }, function(error) {
+                status.innerHTML = "❌ Could not get location. Please allow permission.";
+            });
+        } else {
+            status.innerHTML = "❌ GPS not supported on this browser.";
+        }
+    });
+</script>
+"""
+
+def get_city_from_coords(lat, lon):
+    """Convert coordinates to city name using OpenStreetMap (free, no key)"""
+    try:
+        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
+        response = requests.get(url, headers={'User-Agent': 'KisanMitra'})
+        data = response.json()
+        city = data.get('address', {}).get('city') or data.get('address', {}).get('town') or data.get('address', {}).get('village')
+        return city if city else "Your Location"
+    except:
+        return "Your Location"
 # ========== MAIN TABS ==========
-tab1, tab2, tab3, tab4, tab5 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5")])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5"), "🔄 Crop Rotation"])
+
 
 # ----- TAB 1: VOICE ASSISTANT -----
 with tab1:
@@ -367,18 +580,37 @@ with tab2:
             st.metric("Price per quintal", f"₹{price_info['price']}")
             st.caption(f"Source: {price_info['source']}")
 
-# ----- TAB 3: WEATHER -----
+# ----- TAB 3: WEATHER (with GPS) -----
 with tab3:
     st.header(t("weather_header"))
+    
+    # Add GPS button
+    st.markdown(GPS_HTML, unsafe_allow_html=True)
+    st.caption("— OR —")
+    
     city = st.text_input(t("weather_city"), "Lucknow")
+    
+    # Handle GPS location from form submission
+    if "latitude" in st.query_params and "longitude" in st.query_params:
+        lat = st.query_params["latitude"]
+        lon = st.query_params["longitude"]
+        city = get_city_from_coords(lat, lon)
+        st.success(f"📍 Location detected: {city}")
+        # Auto-fetch weather
+        with st.spinner("Fetching weather..."):
+            w = get_weather(city)  # your existing get_weather function
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Temperature", f"{w['temp']}°C")
+        col2.metric("Humidity", f"{w['humidity']}%")
+        col3.metric("Condition", w['description'].title())
+        st.stop()  # Prevent duplicate display
+    
     if st.button(t("weather_btn")):
         w = get_weather(city)
         col1, col2, col3 = st.columns(3)
         col1.metric("Temperature", f"{w['temp']}°C")
         col2.metric("Humidity", f"{w['humidity']}%")
-        col3.metric("Condition", w['description'].title())
-
-# ----- TAB 4: SOIL HEALTH -----
+        col3.metric("Condition", w['description'].title())# ----- TAB 4: SOIL HEALTH -----
 with tab4:
     st.header(t("soil_header"))
     st.subheader(t("soil_photo_option"))
@@ -415,6 +647,36 @@ with tab5:
             if question:
                 advice = get_personalized_advice(st.session_state.farmer_profile, question)
                 st.markdown(f'<div class="bot-msg">🎯 {advice}</div>', unsafe_allow_html=True)
+
+# ----- TAB 6: CROP ROTATION -----
+with tab6:
+    st.header("🔄 Crop Rotation Advisor")
+    st.caption("Plan your next crop based on previous harvest")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        previous_crop = st.selectbox("Previous crop grown", 
+            ["Sugarcane", "Wheat", "Rice", "Potato", "Tomato", "Maize"])
+    with col2:
+        next_crop = st.selectbox("Crop you want to grow next",
+            ["Wheat", "Mustard", "Rice", "Potato", "Tomato", "Maize", "Pulses", "Onion"])
+    
+    if st.button("Get Rotation Advice"):
+        advice = get_crop_rotation_advice(previous_crop, next_crop)
+        
+        if advice["suitable"]:
+            st.success(f"✅ Good rotation choice!")
+        else:
+            st.warning(f"⚠️ {advice['advice']}")
+        
+        st.info(f"🌱 **Soil advice:** {advice['soil']}")
+        
+        # Also give Gemini-powered detailed advice
+        with st.spinner("Getting detailed AI advice..."):
+            prompt = f"Farmer grew {previous_crop} and wants to grow {next_crop}. Give soil management and fertilizer advice."
+            detailed = model.generate_content(prompt)
+            st.markdown(f'<div class="bot-msg">🤖 <strong>AI Suggestion:</strong><br>{detailed.text}</div>', unsafe_allow_html=True)
+
 
 # ----- FOOTER -----
 st.markdown("---")
