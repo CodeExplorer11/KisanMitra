@@ -17,10 +17,13 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # If running on Streamlit Cloud, use st.secrets
 try:
-    if not GEMINI_API_KEY and "GEMINI_API_KEY" in st.secrets:
-        GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 except:
-    pass
+    # Fallback to .env for local testing
+    from dotenv import load_dotenv
+    import os
+    load_dotenv()
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # ========== CONFIGURE GEMINI ==========
 if not GEMINI_API_KEY:
@@ -31,12 +34,122 @@ try:
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-pro')
     vision_model = genai.GenerativeModel('gemini-pro-vision')
+    st.success("✅ Gemini API connected successfully!")  # This will confirm it works
 except Exception as e:
     st.error(f"❌ Gemini configuration failed: {e}")
     st.stop()
 
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
+# ========== MULTILINGUAL SUPPORT ==========
+# Define supported languages
+SUPPORTED_LANGS = {
+    "en": "English",
+    "hi": "हिंदी",
+}
+
+DEFAULT_LANGUAGE = "en"
+
+# Translation dictionary for UI text
+TEXTS = {
+    "en": {
+        "app_title": "🌾 KisanMitra",
+        "app_caption": "Your Voice Farming Companion",
+        "sidebar_title": "🌾 KisanMitra",
+        "sidebar_lang": "🗣️ Response Language",
+        "sidebar_profile": "👨‍🌾 Farmer Profile",
+        "sidebar_profile_placeholder": "Your details (crops, land, location)",
+        "sidebar_history": "📜 Conversation History",
+        "sidebar_clear": "Clear History",
+        "tab1": "🎤 Voice Assistant",
+        "tab2": "💰 Market Prices",
+        "tab3": "🌤️ Weather",
+        "tab4": "🧪 Soil Health",
+        "tab5": "📝 Personalized Advice",
+        "voice_header": "🎤 Ask by Voice",
+        "voice_placeholder": "Tap to record your question",
+        "voice_transcribing": "Transcribing...",
+        "voice_thinking": "Getting advice...",
+        "voice_error": "Could not understand. Please speak clearly.",
+        "voice_type_header": "Or type your question",
+        "voice_type_placeholder": "Type here",
+        "voice_ask_btn": "Ask",
+        "market_header": "💰 Mandi Prices",
+        "market_info": "ℹ️ Live API is ready but waiting for government API key. Showing realistic sample prices.",
+        "market_commodity": "Commodity (e.g., Wheat, Rice, Tomato)",
+        "market_state": "State",
+        "market_btn": "Get Price",
+        "weather_header": "🌤️ Weather",
+        "weather_city": "Enter district/city name",
+        "weather_btn": "Get Weather",
+        "soil_header": "🧪 Soil Health Analysis",
+        "soil_photo_option": "Option 1: Upload a photo of your soil",
+        "soil_photo_btn": "Analyze Soil from Photo",
+        "soil_pdf_option": "Option 2: Upload soil lab report (PDF)",
+        "soil_pdf_btn": "Analyze PDF Report",
+        "soil_manual_option": "Option 3: Enter test results manually",
+        "soil_manual_btn": "Get Manual Advice",
+        "personalized_header": "📝 Personalized Farming Advice",
+        "personalized_warning": "Please fill your Farmer Profile in the sidebar first.",
+        "personalized_question": "What specific advice do you need? (e.g., sowing time, pest control, fertilizer)",
+        "personalized_btn": "Get Personalized Advice",
+        "footer": "🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!"
+    },
+    "hi": {
+        "app_title": "🌾 किसान मित्र",
+        "app_caption": "आपका आवाज़ी खेती साथी",
+        "sidebar_title": "🌾 किसान मित्र",
+        "sidebar_lang": "🗣️ जवाब की भाषा",
+        "sidebar_profile": "👨‍🌾 किसान प्रोफ़ाइल",
+        "sidebar_profile_placeholder": "आपका विवरण (फसलें, ज़मीन, स्थान)",
+        "sidebar_history": "📜 बातचीत इतिहास",
+        "sidebar_clear": "इतिहास साफ़ करें",
+        "tab1": "🎤 आवाज़ सहायक",
+        "tab2": "💰 मंडी भाव",
+        "tab3": "🌤️ मौसम",
+        "tab4": "🧪 मिट्टी स्वास्थ्य",
+        "tab5": "📝 व्यक्तिगत सलाह",
+        "voice_header": "🎤 आवाज़ से पूछें",
+        "voice_placeholder": "अपना सवाल रिकॉर्ड करें",
+        "voice_transcribing": "लिख रहा हूँ...",
+        "voice_thinking": "जवाब दे रहा हूँ...",
+        "voice_error": "समझ नहीं आया। कृपया साफ़ बोलें।",
+        "voice_type_header": "या लिखकर पूछें",
+        "voice_type_placeholder": "यहाँ लिखें",
+        "voice_ask_btn": "पूछें",
+        "market_header": "💰 मंडी भाव",
+        "market_info": "ℹ️ लाइव API तैयार है, सरकारी API कुंजी का इंतज़ार है। नमूना मूल्य दिखा रहे हैं।",
+        "market_commodity": "फसल (जैसे, गेहूं, धान, टमाटर)",
+        "market_state": "राज्य",
+        "market_btn": "भाव देखें",
+        "weather_header": "🌤️ मौसम",
+        "weather_city": "जिला/शहर का नाम लिखें",
+        "weather_btn": "मौसम देखें",
+        "soil_header": "🧪 मिट्टी स्वास्थ्य जांच",
+        "soil_photo_option": "विकल्प 1: मिट्टी की फोटो अपलोड करें",
+        "soil_photo_btn": "फोटो से मिट्टी जांचें",
+        "soil_pdf_option": "विकल्प 2: मिट्टी लैब रिपोर्ट (PDF) अपलोड करें",
+        "soil_pdf_btn": "PDF रिपोर्ट जांचें",
+        "soil_manual_option": "विकल्प 3: मैन्युअल रूप से मान दर्ज करें",
+        "soil_manual_btn": "मैन्युअल सलाह लें",
+        "personalized_header": "📝 व्यक्तिगत खेती सलाह",
+        "personalized_warning": "कृपया पहले साइडबार में किसान प्रोफ़ाइल भरें।",
+        "personalized_question": "आपको किस सलाह की ज़रूरत है? (जैसे, बुवाई का समय, कीट नियंत्रण, खाद)",
+        "personalized_btn": "व्यक्तिगत सलाह लें",
+        "footer": "🌾 किसान मित्र – आवाज़-पहला, वास्तविक-समय, व्यक्तिगत खेती साथी | जय किसान!"
+    }
+}
+
+def t(key):
+    """Get translation for current language."""
+    # Get language from session state, default to English
+    lang = st.session_state.get("language", DEFAULT_LANGUAGE)
+    # Return translation or key if not found
+    return TEXTS.get(lang, TEXTS[DEFAULT_LANGUAGE]).get(key, key)
+
+# Initialize session state for language
+if "language" not in st.session_state:
+    st.session_state.language = DEFAULT_LANGUAGE
 
 # ========== CUSTOM CSS (Mobile-Friendly) ==========
 st.markdown("""
@@ -62,22 +175,35 @@ if "farmer_profile" not in st.session_state:
 # ========== SIDEBAR ==========
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=80)
-    st.title("🌾 KisanMitra")
+    st.title(t("sidebar_title"))
     st.markdown("---")
-    st.session_state.lang_pref = st.selectbox("🗣️ Response Language", ["English", "Hindi", "Hinglish"])
+    
+    # Language selector dropdown
+    selected_lang = st.selectbox(
+        t("sidebar_lang"),
+        options=list(SUPPORTED_LANGS.keys()),
+        format_func=lambda x: SUPPORTED_LANGS[x],
+        index=list(SUPPORTED_LANGS.keys()).index(st.session_state.language)
+    )
+    if selected_lang != st.session_state.language:
+        st.session_state.language = selected_lang
+        st.rerun()
+    
+    # Also set response language for Gemini (same as UI language)
+    st.session_state.lang_pref = "English" if st.session_state.language == "en" else "Hindi"
+    
     st.markdown("---")
-    st.subheader("👨‍🌾 Farmer Profile")
-    st.session_state.farmer_profile = st.text_area("Your details (crops, land, location)", height=100)
+    st.subheader(t("sidebar_profile"))
+    st.session_state.farmer_profile = st.text_area("", value=st.session_state.farmer_profile, placeholder=t("sidebar_profile_placeholder"), height=100)
     st.markdown("---")
-    st.subheader("📜 Conversation History")
-    if st.button("Clear History"):
+    st.subheader(t("sidebar_history"))
+    if st.button(t("sidebar_clear")):
         st.session_state.history = []
         st.rerun()
     for chat in reversed(st.session_state.history[-5:]):
         with st.expander(f"🗣️ {chat['q'][:40]}..."):
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
-
 # ========== HELPER FUNCTIONS ==========
 def transcribe_audio(audio_bytes):
     try:
@@ -170,8 +296,8 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎤 Voice Assistant", "💰 Market Pri
 
 # ----- TAB 1: VOICE ASSISTANT -----
 with tab1:
-    st.header("🎤 Ask by Voice")
-    audio_val = st.audio_input("Tap to record")
+    st.header(t("voice header"))
+    audio_val = st.audio_input(t("voice_placeholder"))
     if audio_val:
         with st.spinner("Transcribing..."):
             text = transcribe_audio(audio_val.getvalue())
@@ -184,11 +310,11 @@ with tab1:
             # Auto-speak
             st.markdown(f'<audio autoplay><source src="https://api.streamelements.com/kappa-v2/speech?voice=Google%20UK%20English%20Female&text={ans}"></audio>', unsafe_allow_html=True)
         else:
-            st.error("Could not understand. Please speak clearly.")
+            st.error(t("voice_error"))
     st.divider()
-    st.subheader("Or type your question")
-    txt_q = st.text_input("Type here")
-    if st.button("Ask", key="ask_text"):
+    st.subheader(t("voice_type_header"))
+    txt_q = st.text_input(t("voice_type_placeholder"))
+    if st.button(t("voice_ask_btn"), key="ask_text"):
         if txt_q:
             ans = get_ai_response(txt_q, st.session_state.lang_pref)
             st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {txt_q}</div>', unsafe_allow_html=True)
@@ -197,14 +323,14 @@ with tab1:
 
 # ----- TAB 2: MARKET PRICES (Mock but ready) -----
 with tab2:
-    st.header("💰 Mandi Prices")
-    st.info("ℹ️ Live API is ready but waiting for government API key. Showing realistic sample prices.")
+    st.header(t("market_header"))
+    st.info(t("market_info"))
     col1, col2 = st.columns(2)
     with col1:
-        commodity = st.text_input("Commodity (e.g., Wheat, Rice, Tomato)")
+        commodity = st.text_input(t("market_commodity"))
     with col2:
-        state = st.text_input("State", "Uttar Pradesh")
-    if st.button("Get Price"):
+        state = st.text_input(t("market_state"))
+    if st.button(t("market_btn")):
         if commodity:
             with st.spinner("Fetching market data..."):
                 price_info = get_mandi_price(commodity, state)
@@ -216,9 +342,9 @@ with tab2:
 
 # ----- TAB 3: WEATHER (Real-time if key exists) -----
 with tab3:
-    st.header("🌤️ Weather")
-    city = st.text_input("Enter district/city name", "Lucknow")
-    if st.button("Get Weather"):
+    st.header(t("weather_header"))
+    city = st.text_input(t("weather_city"), "Lucknow")
+    if st.button(t("weather_btn")):
         with st.spinner("Fetching weather..."):
             w = get_weather(city)
         if "error" in w:
@@ -234,30 +360,30 @@ with tab3:
 
 # ----- TAB 4: SOIL HEALTH (Photo + PDF upload) -----
 with tab4:
-    st.header("🧪 Soil Health Analysis")
-    st.subheader("Option 1: Upload a photo of your soil")
+    st.header(t("soil_header"))
+    st.subheader(t("soil_photo_option"))
     soil_img = st.file_uploader("Take or upload a soil photo", type=["jpg", "jpeg", "png"])
     if soil_img:
         image = Image.open(soil_img)
         st.image(image, width=200)
-        if st.button("Analyze Soil from Photo"):
+        if st.button(t("soil_photo_btn")):
             with st.spinner("Analyzing image..."):
                 advice = analyze_soil_image(image)
             st.success("🌱 Soil Analysis Result")
             st.markdown(f'<div class="bot-msg">📸 {advice}</div>', unsafe_allow_html=True)
 
-    st.subheader("Option 2: Upload soil lab report (PDF)")
+    st.subheader(t("soil_pdf_option"))
     pdf_file = st.file_uploader("Upload PDF report", type=["pdf"])
     if pdf_file:
-        if st.button("Analyze PDF Report"):
+        if st.button(t("soil_pdf_btn")):
             with st.spinner("Reading PDF and analyzing..."):
                 advice = analyze_soil_pdf(pdf_file.read())
             st.success("📄 Report Analysis")
             st.markdown(f'<div class="bot-msg">📑 {advice}</div>', unsafe_allow_html=True)
 
-    st.subheader("Option 3: Enter test results manually")
+    st.subheader(t("soil_manual_option"))
     soil_input = st.text_area("Enter values (e.g., pH: 7.2, N: 250 kg/ha, P: 30 kg/ha, K: 120 kg/ha)")
-    if st.button("Get Manual Advice"):
+    if st.button(t("soil_manual_btn")):
         if soil_input:
             with st.spinner("Analyzing..."):
                 advice = get_soil_advice(soil_input)
@@ -265,12 +391,12 @@ with tab4:
 
 # ----- TAB 5: PERSONALIZED ADVICE -----
 with tab5:
-    st.header("📝 Personalized Farming Advice")
+    st.header(t("personalized_header"))
     if not st.session_state.farmer_profile:
-        st.warning("Please fill your Farmer Profile in the sidebar first.")
+        st.warning(t("personalized_warning"))
     else:
-        question = st.text_area("What specific advice do you need? (e.g., sowing time, pest control, fertilizer)")
-        if st.button("Get Personalized Advice"):
+        question = st.text_area(	t("personalized_question"))
+        if st.button(t("personalized_btn")):
             if question:
                 with st.spinner("Generating custom advice..."):
                     advice = get_personalized_advice(st.session_state.farmer_profile, question)
@@ -281,4 +407,4 @@ with tab5:
 
 # ----- FOOTER -----
 st.markdown("---")
-st.caption("🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!")
+st.caption(	t("footer"))
