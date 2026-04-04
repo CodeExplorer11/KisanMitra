@@ -18,93 +18,106 @@ else:
 
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== VIBRANT CSS ==========
+# ========== HIGH CONTRAST CSS (All text visible) ==========
 st.markdown("""
 <style>
-    /* Main background gradient */
+    /* Main background - light, not white */
     .stApp {
-        background: linear-gradient(135deg, #f9f3e6 0%, #fff3e0 100%);
+        background: linear-gradient(135deg, #f0f7f0 0%, #e8f0e8 100%);
     }
-    /* Card style */
+    /* Card style with dark text */
     .card {
-        background: rgba(255,255,255,0.95);
-        border-radius: 28px;
+        background: white;
+        border-radius: 24px;
         padding: 1.8rem;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         margin-bottom: 1.5rem;
-        backdrop-filter: blur(2px);
-        border: 1px solid rgba(255,215,150,0.5);
+        border: 1px solid #d0e0c0;
     }
-    /* Voice button */
+    /* Voice button - bright orange */
     .voice-btn {
         background: linear-gradient(95deg, #ff8c00, #ffb347);
-        color: white;
-        font-size: 28px;
-        padding: 18px 30px;
+        color: white !important;
+        font-size: 24px;
+        padding: 16px 30px;
         border: none;
         border-radius: 60px;
         cursor: pointer;
         width: 100%;
         font-weight: bold;
         transition: all 0.2s;
-        box-shadow: 0 8px 20px rgba(255,140,0,0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .voice-btn:hover {
         transform: scale(1.02);
         background: linear-gradient(95deg, #ffa033, #ffcc66);
     }
-    /* Chat bubbles */
+    /* Chat bubbles - clear text */
     .user-msg {
-        background: #fff0db;
+        background: #e3f2fd;
         padding: 12px 18px;
         border-radius: 24px 24px 8px 24px;
         margin: 12px 0;
         font-size: 16px;
+        color: #1a1a1a;
         border-left: 5px solid #ff8c00;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .bot-msg {
-        background: #e8f0fe;
+        background: #e8f5e9;
         padding: 12px 18px;
         border-radius: 24px 24px 24px 8px;
         margin: 12px 0;
         font-size: 16px;
+        color: #1a1a1a;
         border-right: 5px solid #2e7d32;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    /* Sidebar */
+    /* Sidebar - dark green with white text */
     [data-testid="stSidebar"] {
-        background: #2e5e2e;
-        background-image: linear-gradient(145deg, #2e5e2e, #1e3a1e);
+        background: #1e3a1e;
+        background-image: linear-gradient(145deg, #1e3a1e, #0e2a0e);
     }
     [data-testid="stSidebar"] * {
         color: white !important;
     }
-    h1, h2, h3 {
-        color: #b45309;
+    /* Headers */
+    h1, h2, h3, .stMarkdown {
+        color: #1e3a1e !important;
     }
+    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 12px;
-        background-color: #fff7e8;
+        background-color: #ffffffcc;
         border-radius: 40px;
         padding: 6px;
     }
     .stTabs [data-baseweb="tab"] {
         border-radius: 40px;
         padding: 8px 24px;
-        background-color: #ffe6cc;
+        background-color: #f0e6d0;
         font-weight: bold;
+        color: #1e3a1e;
     }
     .stTabs [aria-selected="true"] {
         background-color: #ff8c00;
         color: white;
     }
-    /* Language selector */
-    .lang-select {
-        background: #fff0db;
-        padding: 10px;
-        border-radius: 40px;
-        margin-bottom: 15px;
+    /* Status message */
+    #statusMsg {
+        color: #b45309 !important;
+        font-weight: bold;
+    }
+    /* Buttons */
+    .stButton button {
+        background-color: #2e7d32;
+        color: white;
+        border-radius: 30px;
+        padding: 10px 20px;
+        font-weight: bold;
+    }
+    .stButton button:hover {
+        background-color: #1e5e22;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -118,47 +131,47 @@ if "lang" not in st.session_state:
 # ========== SIDEBAR ==========
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=80)
-    st.title("🌾 किसान मित्र")
+    st.title("🌾 KisanMitra")
     st.markdown("---")
-    st.subheader("🗣️ भाषा चुनें")
+    st.subheader("🗣️ Response Language")
     lang_choice = st.radio(
-        "बोलने और जवाब की भाषा",
-        ["Auto (जैसे बोलें वैसे)", "हिंदी", "हिंग्लिश", "English"],
+        "Choose language for answers",
+        ["Auto (match your speech)", "Hindi", "Hinglish", "English"],
         index=0
     )
-    if lang_choice == "Auto (जैसे बोलें वैसे)":
+    if lang_choice == "Auto (match your speech)":
         st.session_state.lang = "auto"
-    elif lang_choice == "हिंदी":
+    elif lang_choice == "Hindi":
         st.session_state.lang = "hi"
-    elif lang_choice == "हिंग्लिश":
+    elif lang_choice == "Hinglish":
         st.session_state.lang = "hinglish"
     else:
         st.session_state.lang = "en"
     
     st.markdown("---")
-    st.subheader("📜 बातचीत इतिहास")
-    if st.button("🗑️ साफ करें", use_container_width=True):
+    st.subheader("📜 Conversation History")
+    if st.button("🗑️ Clear History", use_container_width=True):
         st.session_state.history = []
         st.rerun()
     for idx, chat in enumerate(reversed(st.session_state.history[-8:])):
         with st.expander(f"🗣️ {chat['q'][:35]}..."):
-            st.write(f"**प्रश्न:** {chat['q']}")
-            st.write(f"**जवाब:** {chat['a'][:150]}...")
+            st.write(f"**Question:** {chat['q']}")
+            st.write(f"**Answer:** {chat['a'][:150]}...")
 
 # ========== MAIN TABS ==========
-tab1, tab2, tab3 = st.tabs(["🎤 वॉइस सहायक", "🔬 रोग पहचान", "🌤️ मौसम / भाव"])
+tab1, tab2, tab3 = st.tabs(["🎤 Voice Assistant", "🔬 Disease Detection", "🌤️ Weather & Market"])
 
 # ----- TAB 1: VOICE ASSISTANT -----
 with tab1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.title("🌾 आवाज़ से पूछें")
-    st.caption("अपनी भाषा में बोलें – AI तुरंत जवाब देगा और बोलेगा")
+    st.title("🌾 Ask by Voice")
+    st.caption("Speak in your language – AI will answer and speak back")
     
-    # Voice button (JavaScript with Web Speech API)
+    # Voice button with JavaScript (Web Speech API)
     voice_html = """
     <div style="text-align:center; margin:20px 0;">
-        <button id="micBtn" class="voice-btn">🎤 बोलें / Speak Now</button>
-        <p id="statusMsg" style="margin-top:15px; font-size:16px; color:#b45309;">👉 Tap, allow mic, speak naturally</p>
+        <button id="micBtn" class="voice-btn">🎤 Tap to Speak</button>
+        <p id="statusMsg" style="margin-top:15px; font-size:16px;">👉 Tap, allow mic, speak naturally</p>
     </div>
     <script>
         const mic = document.getElementById('micBtn');
@@ -166,22 +179,22 @@ with tab1:
         let recognition;
         mic.onclick = function() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                statusSpan.innerText = "❌ Your browser doesn't support voice input. Try Chrome.";
+                statusSpan.innerText = "❌ Voice not supported. Use Chrome on mobile.";
                 return;
             }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
-            recognition.lang = '';  // auto-detect language
+            recognition.lang = '';  // auto-detect
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
             recognition.onstart = function() {
-                statusSpan.innerHTML = "🎙️ सुन रहा हूँ... बोलिए...";
+                statusSpan.innerHTML = "🎙️ Listening... Speak now...";
                 mic.style.background = "#e65c00";
             };
             recognition.onresult = function(event) {
                 const spoken = event.results[0][0].transcript;
-                statusSpan.innerHTML = "✅ सुना: " + spoken;
-                // send to Streamlit backend
+                statusSpan.innerHTML = "✅ Recognized: " + spoken;
+                // Send to Streamlit backend
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '';
@@ -193,7 +206,7 @@ with tab1:
                 form.submit();
             };
             recognition.onerror = function(e) {
-                statusSpan.innerHTML = "❌ Error: " + e.error + ". Please try again.";
+                statusSpan.innerHTML = "❌ Error: " + e.error + ". Try again.";
                 mic.style.background = "linear-gradient(95deg, #ff8c00, #ffb347)";
             };
             recognition.onend = function() {
@@ -203,14 +216,14 @@ with tab1:
         };
     </script>
     """
-    st.components.v1.html(voice_html, height=200)
+    st.components.v1.html(voice_html, height=180)
     
     # Process voice input
     if "voice_text" in st.query_params:
         user_q = st.query_params["voice_text"]
         if user_q:
             # Display user message
-            st.markdown(f'<div class="user-msg">🗣️ <strong>आप:</strong> {user_q}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {user_q}</div>', unsafe_allow_html=True)
             
             # Determine response language
             has_hindi = any(u'\u0900' <= c <= u'\u097f' for c in user_q)
@@ -224,9 +237,9 @@ with tab1:
                 reply_lang = "English"
             
             # Get AI response from Gemini
-            with st.spinner("🤔 सोच रहा हूँ..."):
-                prompt = f"""You are KisanMitra, a friendly expert farmer assistant.
-Language: {reply_lang}
+            with st.spinner("🤔 Thinking..."):
+                prompt = f"""You are KisanMitra, a friendly expert farming assistant.
+Response language: {reply_lang}
 Farmer asked: "{user_q}"
 Give a short, practical, actionable answer (max 3 sentences). Use local terms if helpful.
 If in Hindi/Hinglish, keep it simple."""
@@ -239,7 +252,7 @@ If in Hindi/Hinglish, keep it simple."""
             # Show bot response
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {answer}</div>', unsafe_allow_html=True)
             
-            # Speak answer (browser TTS)
+            # Speak answer using browser TTS
             speak_js = f"""
             <script>
                 var utterance = new SpeechSynthesisUtterance(`{answer}`);
@@ -258,43 +271,43 @@ If in Hindi/Hinglish, keep it simple."""
     
     # Show recent conversation
     if st.session_state.history:
-        st.markdown("### 📝 हाल की बातें")
+        st.markdown("### 📝 Recent Conversations")
         for chat in st.session_state.history[-5:]:
             st.markdown(f'<div class="user-msg">🗣️ {chat["q"]}</div>', unsafe_allow_html=True)
             st.markdown(f'<div class="bot-msg">🤖 {chat["a"]}</div>', unsafe_allow_html=True)
     else:
-        st.info("☝️ ऊपर माइक दबाएं और बोलें। मैं किसानी के सारे सवालों के जवाब दूंगा।")
+        st.info("☝️ Tap the microphone above and speak. I'll answer all farming questions.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ----- TAB 2: DISEASE DETECTION -----
 with tab2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("🔬 फसल रोग पहचान")
-    img_file = st.file_uploader("फसल की तस्वीर लें / Upload image", type=["jpg","jpeg","png"])
+    st.subheader("🔬 Crop Disease Detection")
+    img_file = st.file_uploader("Upload a photo of the crop", type=["jpg","jpeg","png"])
     if img_file:
         image = Image.open(img_file)
         st.image(image, width=250)
-        if st.button("🔍 रोग पहचानें", use_container_width=True):
-            with st.spinner("विश्लेषण हो रहा है..."):
+        if st.button("🔍 Detect Disease", use_container_width=True):
+            with st.spinner("Analyzing..."):
                 diag_prompt = "Analyze this crop image. List: 1) Possible disease, 2) Organic treatment, 3) Chemical solution if needed. Keep short."
                 response = vision_model.generate_content([diag_prompt, image])
-                st.success("✅ निदान परिणाम")
+                st.success("✅ Diagnosis Result")
                 st.markdown(f'<div class="bot-msg">🌿 {response.text}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ----- TAB 3: MARKET & WEATHER (Simple) -----
+# ----- TAB 3: MARKET & WEATHER -----
 with tab3:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("🌤️ मौसम जानकारी")
-    if st.button("आज का मौसम", use_container_width=True):
-        st.info("🌡️ तापमान 28-32°C, हल्की धूप। सिंचाई के लिए उपयुक्त।")
-    st.subheader("💰 मंडी भाव")
-    crop = st.selectbox("फसल चुनें", ["गेहूं", "धान", "सरसों", "टमाटर", "आलू"])
-    if st.button("भाव देखें", use_container_width=True):
-        prices = {"गेहूं": "₹2,250/क्विंटल", "धान": "₹2,180/क्विंटल", "सरसों": "₹5,650/क्विंटल", "टमाटर": "₹1,800/क्विंटल", "आलू": "₹1,200/क्विंटल"}
-        st.success(f"{crop} का आज का भाव: {prices[crop]}")
+    st.subheader("🌤️ Weather Information")
+    if st.button("Today's Weather", use_container_width=True):
+        st.info("🌡️ Temperature: 28-32°C, Partly sunny. Good for farming activities.")
+    st.subheader("💰 Market Prices")
+    crop = st.selectbox("Select Crop", ["Wheat", "Rice", "Mustard", "Tomato", "Potato"])
+    if st.button("Get Price", use_container_width=True):
+        prices = {"Wheat": "₹2,250/quintal", "Rice": "₹2,180/quintal", "Mustard": "₹5,650/quintal", "Tomato": "₹1,800/quintal", "Potato": "₹1,200/quintal"}
+        st.success(f"Today's price for {crop}: {prices[crop]}")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
-st.caption("🌾 KisanMitra – आपकी आवाज़ में किसानी की पूरी मदद | जय हिंद, जय किसान!")
+st.caption("🌾 KisanMitra – Your Voice Farming Companion | Jai Hind, Jai Kisan!")
