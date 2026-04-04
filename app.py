@@ -42,12 +42,29 @@ if not GEMINI_API_KEY:
 GEMINI_API_KEY = GEMINI_API_KEY.strip().strip('"').strip("'")
 
 # ========== CONFIGURE GEMINI (CORRECT MODEL NAMES) ==========
+# ========== CONFIGURE GEMINI ==========
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     
-    # Use the correct model names (gemini-1.5-flash works and is free)
-    model = genai.GenerativeModel('models/gemini-2.0-flash-exp')
-    vision_model = genai.GenerativeModel('models/gemini-2.0-flash-exp')
+    # List all available models that support generateContent
+    st.write("🔍 **Available models:**")
+    available_models = []
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            available_models.append(m.name)
+            st.write(f"- {m.name}")
+    
+    if not available_models:
+        st.error("No models available. Check your API key.")
+        st.stop()
+    
+    # Use the first available model (usually the best)
+    model_name = available_models[0]
+    st.info(f"✅ Using model: {model_name}")
+    
+    model = genai.GenerativeModel(model_name)
+    vision_model = genai.GenerativeModel(model_name)
+    
     # Test the API key
     test_response = model.generate_content("Say 'API key works'")
     
@@ -59,9 +76,7 @@ try:
         
 except Exception as e:
     st.error(f"❌ Gemini configuration failed: {e}")
-    st.info("💡 Make sure your API key is correct and has no extra spaces.")
     st.stop()
-
 # ========== MULTILINGUAL SUPPORT ==========
 SUPPORTED_LANGS = {
     "en": "English",
