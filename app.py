@@ -6,6 +6,7 @@ import speech_recognition as sr
 from PIL import Image
 import datetime
 import PyPDF2
+import json
 
 # ========== PAGE CONFIG (MUST BE FIRST) ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
@@ -196,15 +197,18 @@ st.markdown("""
     .stTabs [aria-selected="true"] { background-color: #ff8c00; color: white; }
 </style>
 """, unsafe_allow_html=True)
-# Auto-speak the answer using browser TTS
+# Auto-speak the answer (fixed for special characters)
+import json
+safe_answer = json.dumps(ans)  # Escapes quotes and special chars
+
 speak_js = f"""
 <script>
-    var utterance = new SpeechSynthesisUtterance({ans});
+    var utterance = new SpeechSynthesisUtterance({safe_answer});
     utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
     window.speechSynthesis.speak(utterance);
 </script>
 """
-st.components.v1.html(speak_js, height=0)
+st.components.v1.html(speak_js, height=0)st.components.v1.html(speak_js, height=0)
 
 # ========== SIDEBAR ==========
 with st.sidebar:
@@ -331,10 +335,12 @@ with tab1:
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": text, "a": ans})
             
-            # Auto-speak the answer
+            # Auto-speak the answer (fixed)
+            import json
+            safe_answer = json.dumps(ans)
             speak_js = f"""
             <script>
-                var utterance = new SpeechSynthesisUtterance({ans});
+                var utterance = new SpeechSynthesisUtterance({safe_answer});
                 utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
                 window.speechSynthesis.speak(utterance);
             </script>
@@ -353,16 +359,18 @@ with tab1:
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": txt_q, "a": ans})
             
-            # Auto-speak the answer
+            # Auto-speak the answer (fixed)
+            import json
+            safe_answer = json.dumps(ans)
             speak_js = f"""
             <script>
-                var utterance = new SpeechSynthesisUtterance({ans});
+                var utterance = new SpeechSynthesisUtterance({safe_answer});
                 utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
                 window.speechSynthesis.speak(utterance);
             </script>
             """
             st.components.v1.html(speak_js, height=0)
-# ----- TAB 2: MARKET PRICES -----
+            # ----- TAB 2: MARKET PRICES -----
 with tab2:
     st.header(t("market_header"))
     st.info(t("market_info"))
