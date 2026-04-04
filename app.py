@@ -63,14 +63,6 @@ try:
 except Exception as e:
     st.error(f"❌ Gemini error: {e}")
     st.stop()    
-    # Test the API key
-    test_response = model.generate_content("Say 'API key works'")
-    
-    if test_response and test_response.text:
-        st.success("✅ Gemini API connected successfully!")
-    else:
-        st.error("❌ API key validation failed.")
-        st.stop()
         
 except Exception as e:
     st.error(f"❌ Gemini configuration failed: {e}")
@@ -197,18 +189,6 @@ st.markdown("""
     .stTabs [aria-selected="true"] { background-color: #ff8c00; color: white; }
 </style>
 """, unsafe_allow_html=True)
-# Auto-speak the answer (fixed for special characters)
-import json
-safe_answer = json.dumps(ans)  # Escapes quotes and special chars
-
-speak_js = f"""
-<script>
-    var utterance = new SpeechSynthesisUtterance({safe_answer});
-    utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
-    window.speechSynthesis.speak(utterance);
-</script>
-"""
-st.components.v1.html(speak_js, height=0)st.components.v1.html(speak_js, height=0)
 
 # ========== SIDEBAR ==========
 with st.sidebar:
@@ -335,7 +315,7 @@ with tab1:
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": text, "a": ans})
             
-            # Auto-speak the answer (fixed)
+            # Auto-speak
             import json
             safe_answer = json.dumps(ans)
             speak_js = f"""
@@ -359,7 +339,7 @@ with tab1:
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": txt_q, "a": ans})
             
-            # Auto-speak the answer (fixed)
+            # Auto-speak
             import json
             safe_answer = json.dumps(ans)
             speak_js = f"""
@@ -370,7 +350,8 @@ with tab1:
             </script>
             """
             st.components.v1.html(speak_js, height=0)
-            # ----- TAB 2: MARKET PRICES -----
+
+# ----- TAB 2: MARKET PRICES -----
 with tab2:
     st.header(t("market_header"))
     st.info(t("market_info"))
