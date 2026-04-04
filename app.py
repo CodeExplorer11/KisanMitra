@@ -11,7 +11,6 @@ import PyPDF2
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
 # ========== LOAD API KEYS ==========
-# Try multiple methods to get the API key
 GEMINI_API_KEY = None
 
 # Method 1: Streamlit Cloud Secrets
@@ -34,47 +33,42 @@ if not GEMINI_API_KEY:
     except:
         pass
 
-# Method 3: Hardcoded for testing (REMOVE AFTER FIXING)
-# ONLY use this temporarily to test if key works
-if not GEMINI_API_KEY:
-    # PASTE YOUR ACTUAL KEY HERE TEMPORARILY
-    GEMINI_API_KEY = "AIzaSyDHwdkIGSUSZM2ZVSgd8UK5vH-KT1139CM"  # <-- REPLACE WITH YOUR REAL KEY
-
 # ========== VALIDATE API KEY ==========
 if not GEMINI_API_KEY:
     st.error("❌ Gemini API key missing. Please add GEMINI_API_KEY to Streamlit Secrets.")
     st.stop()
 
-# Remove quotes if accidentally included
+# Clean the key
 GEMINI_API_KEY = GEMINI_API_KEY.strip().strip('"').strip("'")
 
-# ========== CONFIGURE GEMINI ==========
+# ========== CONFIGURE GEMINI (UPDATED MODEL NAMES) ==========
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     
+    # List available models to verify (optional, for debugging)
+    # for m in genai.list_models():
+    #     if 'generateContent' in m.supported_generation_methods:
+    #         st.write(m.name)
+    
+    # Use the correct model names (updated from gemini-pro)
+    model = genai.GenerativeModel('models/gemini-1.5-flash')
+    vision_model = genai.GenerativeModel('models/gemini-1.5-flash')
+    
     # Test the API key with a simple call
-    test_model = genai.GenerativeModel('gemini-pro')
-    test_response = test_model.generate_content("Say 'API key works'")
+    test_response = model.generate_content("Say 'API key works'")
     
     if test_response and test_response.text:
         st.success("✅ Gemini API connected successfully!")
-        model = genai.GenerativeModel('gemini-pro')
-        vision_model = genai.GenerativeModel('gemini-pro-vision')
     else:
-        st.error("❌ API key validation failed. Key may be invalid.")
+        st.error("❌ API key validation failed.")
         st.stop()
         
 except Exception as e:
     st.error(f"❌ Gemini configuration failed: {e}")
-    st.info("💡 Tip: Make sure your API key is correct and has no extra spaces.")
+    st.info("💡 Make sure your API key is correct and has no extra spaces.")
     st.stop()
 
-# Rest of your app continues here...
-
-# ========== PAGE CONFIG ==========
-st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 # ========== MULTILINGUAL SUPPORT ==========
-# Define supported languages
 SUPPORTED_LANGS = {
     "en": "English",
     "hi": "हिंदी",
@@ -82,7 +76,6 @@ SUPPORTED_LANGS = {
 
 DEFAULT_LANGUAGE = "en"
 
-# Translation dictionary for UI text
 TEXTS = {
     "en": {
         "app_title": "🌾 KisanMitra",
@@ -173,17 +166,19 @@ TEXTS = {
 }
 
 def t(key):
-    """Get translation for current language."""
-    # Get language from session state, default to English
     lang = st.session_state.get("language", DEFAULT_LANGUAGE)
-    # Return translation or key if not found
     return TEXTS.get(lang, TEXTS[DEFAULT_LANGUAGE]).get(key, key)
 
-# Initialize session state for language
 if "language" not in st.session_state:
     st.session_state.language = DEFAULT_LANGUAGE
+if "history" not in st.session_state:
+    st.session_state.history = []
+if "lang_pref" not in st.session_state:
+    st.session_state.lang_pref = "English"
+if "farmer_profile" not in st.session_state:
+    st.session_state.farmer_profile = ""
 
-# ========== CUSTOM CSS (Mobile-Friendly) ==========
+# ========== CUSTOM CSS ==========
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #f0f7f0, #e0f0e0); }
@@ -196,21 +191,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ========== SESSION STATE ==========
-if "history" not in st.session_state:
-    st.session_state.history = []
-if "lang_pref" not in st.session_state:
-    st.session_state.lang_pref = "English"
-if "farmer_profile" not in st.session_state:
-    st.session_state.farmer_profile = ""
-
 # ========== SIDEBAR ==========
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=80)
     st.title(t("sidebar_title"))
     st.markdown("---")
     
-    # Language selector dropdown
     selected_lang = st.selectbox(
         t("sidebar_lang"),
         options=list(SUPPORTED_LANGS.keys()),
@@ -219,10 +205,8 @@ with st.sidebar:
     )
     if selected_lang != st.session_state.language:
         st.session_state.language = selected_lang
+        st.session_state.lang_pref = "English" if st.session_state.language == "en" else "Hindi"
         st.rerun()
-    
-    # Also set response language for Gemini (same as UI language)
-    st.session_state.lang_pref = "English" if st.session_state.language == "en" else "Hindi"
     
     st.markdown("---")
     st.subheader(t("sidebar_profile"))
@@ -236,6 +220,7 @@ with st.sidebar:
         with st.expander(f"🗣️ {chat['q'][:40]}..."):
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
+
 # ========== HELPER FUNCTIONS ==========
 def transcribe_audio(audio_bytes):
     try:
@@ -258,11 +243,9 @@ Give a short, practical, actionable answer (max 3 sentences)."""
         return f"⚠️ AI error: {str(e)}"
 
 def get_weather(city):
-    # Placeholder for weather logic
     return {"temp": 28, "humidity": 65, "description": "clear sky", "city": city}
 
 def get_mandi_price(commodity, state="Uttar Pradesh"):
-    # Mock data (realistic) – explains API readiness
     mock_prices = {
         "wheat": 2250, "rice": 2180, "mustard": 5650, "tomato": 1800,
         "potato": 1200, "onion": 2500, "corn": 2120, "chana": 5200
@@ -277,12 +260,11 @@ def get_mandi_price(commodity, state="Uttar Pradesh"):
     }
 
 def analyze_soil_image(image):
-    """Analyze soil health from uploaded photo."""
     prompt = """You are a soil expert. Analyze this soil image and provide:
     1. Estimated soil type (sandy, clay, loamy, etc.)
     2. General health indication (good, moderate, poor)
-    3. Simple recommendation for improvement (organic matter, fertilizer, etc.)
-    Keep answer short and practical for farmers."""
+    3. Simple recommendation for improvement
+    Keep answer short."""
     try:
         response = vision_model.generate_content([prompt, image])
         return response.text
@@ -290,57 +272,49 @@ def analyze_soil_image(image):
         return f"Error analyzing image: {e}"
 
 def analyze_soil_pdf(pdf_bytes):
-    """Extract text from PDF and ask Gemini for soil advice."""
     try:
         reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
         text = ""
         for page in reader.pages:
             text += page.extract_text()
         if not text.strip():
-            return "Could not read text from PDF. Please ensure it contains readable soil test results."
-        prompt = f"""You are a soil expert. Based on the following soil lab report, provide:
-        1. Key findings (pH, NPK, organic matter)
-        2. Soil health status (good/moderate/poor)
-        3. Actionable recommendations for the farmer.
-        Report: {text[:2000]}
-        Keep answer concise and practical."""
+            return "Could not read text from PDF."
+        prompt = f"Analyze this soil report and give recommendations: {text[:1500]}"
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
         return f"Error processing PDF: {e}"
 
 def get_soil_advice(soil_data):
-    prompt = f"Analyze soil: {soil_data}. Give short advice on fertilizer, organic matter, and pH correction. Max 3 sentences."
+    prompt = f"Analyze soil: {soil_data}. Give short advice on fertilizer and pH correction."
     try:
         return model.generate_content(prompt).text
     except:
         return "Unable to analyze soil data."
 
 def get_personalized_advice(profile, question):
-    prompt = f"Farmer profile: {profile}\nQuestion: {question}\nGive personalized, practical advice (max 3 sentences)."
+    prompt = f"Farmer profile: {profile}\nQuestion: {question}\nGive personalized, practical advice."
     try:
         return model.generate_content(prompt).text
     except:
         return "AI temporarily unavailable."
 
 # ========== MAIN TABS ==========
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎤 Voice Assistant", "💰 Market Prices", "🌤️ Weather", "🧪 Soil Health", "📝 Personalized Advice"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5")])
 
 # ----- TAB 1: VOICE ASSISTANT -----
 with tab1:
-    st.header(t("voice header"))
+    st.header(t("voice_header"))
     audio_val = st.audio_input(t("voice_placeholder"))
     if audio_val:
-        with st.spinner("Transcribing..."):
+        with st.spinner(t("voice_transcribing")):
             text = transcribe_audio(audio_val.getvalue())
         if text:
             st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {text}</div>', unsafe_allow_html=True)
-            with st.spinner("Getting advice..."):
+            with st.spinner(t("voice_thinking")):
                 ans = get_ai_response(text, st.session_state.lang_pref)
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": text, "a": ans})
-            # Auto-speak
-            st.markdown(f'<audio autoplay><source src="https://api.streamelements.com/kappa-v2/speech?voice=Google%20UK%20English%20Female&text={ans}"></audio>', unsafe_allow_html=True)
         else:
             st.error(t("voice_error"))
     st.divider()
@@ -353,7 +327,7 @@ with tab1:
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": txt_q, "a": ans})
 
-# ----- TAB 2: MARKET PRICES (Mock but ready) -----
+# ----- TAB 2: MARKET PRICES -----
 with tab2:
     st.header(t("market_header"))
     st.info(t("market_info"))
@@ -361,64 +335,49 @@ with tab2:
     with col1:
         commodity = st.text_input(t("market_commodity"))
     with col2:
-        state = st.text_input(t("market_state"))
+        state = st.text_input(t("market_state"), "Uttar Pradesh")
     if st.button(t("market_btn")):
         if commodity:
-            with st.spinner("Fetching market data..."):
-                price_info = get_mandi_price(commodity, state)
+            price_info = get_mandi_price(commodity, state)
             st.success(f"**{price_info['commodity']}** in {price_info['market']}, {price_info['state']}")
             st.metric("Price per quintal", f"₹{price_info['price']}")
             st.caption(f"Source: {price_info['source']}")
-        else:
-            st.warning("Enter a commodity name.")
 
-# ----- TAB 3: WEATHER (Real-time if key exists) -----
+# ----- TAB 3: WEATHER -----
 with tab3:
     st.header(t("weather_header"))
     city = st.text_input(t("weather_city"), "Lucknow")
     if st.button(t("weather_btn")):
-        with st.spinner("Fetching weather..."):
-            w = get_weather(city)
-        if "error" in w:
-            st.warning(w["error"])
-            # Show demo data
-            st.info("🌡️ Demo: 28°C, Humidity 65%, Clear sky")
-        else:
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Temperature", f"{w['temp']}°C")
-            col2.metric("Humidity", f"{w['humidity']}%")
-            col3.metric("Condition", w['description'].title())
-            st.info(f"📍 {w['city']} | Last updated: {datetime.datetime.now().strftime('%H:%M:%S')}")
+        w = get_weather(city)
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Temperature", f"{w['temp']}°C")
+        col2.metric("Humidity", f"{w['humidity']}%")
+        col3.metric("Condition", w['description'].title())
 
-# ----- TAB 4: SOIL HEALTH (Photo + PDF upload) -----
+# ----- TAB 4: SOIL HEALTH -----
 with tab4:
     st.header(t("soil_header"))
     st.subheader(t("soil_photo_option"))
-    soil_img = st.file_uploader("Take or upload a soil photo", type=["jpg", "jpeg", "png"])
+    soil_img = st.file_uploader("", type=["jpg", "jpeg", "png"])
     if soil_img:
         image = Image.open(soil_img)
         st.image(image, width=200)
         if st.button(t("soil_photo_btn")):
-            with st.spinner("Analyzing image..."):
+            with st.spinner("Analyzing..."):
                 advice = analyze_soil_image(image)
-            st.success("🌱 Soil Analysis Result")
             st.markdown(f'<div class="bot-msg">📸 {advice}</div>', unsafe_allow_html=True)
-
     st.subheader(t("soil_pdf_option"))
-    pdf_file = st.file_uploader("Upload PDF report", type=["pdf"])
+    pdf_file = st.file_uploader("", type=["pdf"])
     if pdf_file:
         if st.button(t("soil_pdf_btn")):
-            with st.spinner("Reading PDF and analyzing..."):
+            with st.spinner("Reading PDF..."):
                 advice = analyze_soil_pdf(pdf_file.read())
-            st.success("📄 Report Analysis")
             st.markdown(f'<div class="bot-msg">📑 {advice}</div>', unsafe_allow_html=True)
-
     st.subheader(t("soil_manual_option"))
-    soil_input = st.text_area("Enter values (e.g., pH: 7.2, N: 250 kg/ha, P: 30 kg/ha, K: 120 kg/ha)")
+    soil_input = st.text_area("")
     if st.button(t("soil_manual_btn")):
         if soil_input:
-            with st.spinner("Analyzing..."):
-                advice = get_soil_advice(soil_input)
+            advice = get_soil_advice(soil_input)
             st.markdown(f'<div class="bot-msg">📋 {advice}</div>', unsafe_allow_html=True)
 
 # ----- TAB 5: PERSONALIZED ADVICE -----
@@ -427,16 +386,12 @@ with tab5:
     if not st.session_state.farmer_profile:
         st.warning(t("personalized_warning"))
     else:
-        question = st.text_area(	t("personalized_question"))
+        question = st.text_area(t("personalized_question"))
         if st.button(t("personalized_btn")):
             if question:
-                with st.spinner("Generating custom advice..."):
-                    advice = get_personalized_advice(st.session_state.farmer_profile, question)
-                st.success("✅ Your Personalized Advice")
+                advice = get_personalized_advice(st.session_state.farmer_profile, question)
                 st.markdown(f'<div class="bot-msg">🎯 {advice}</div>', unsafe_allow_html=True)
-            else:
-                st.warning("Please enter a question.")
 
 # ----- FOOTER -----
 st.markdown("---")
-st.caption(	t("footer"))
+st.caption(t("footer"))

@@ -1,7 +1,7 @@
 streamlit
 google-generativeai
-python-dotenv
-SpeechRecognition
-Pillow
-requests
+speechrecognition
 PyPDF2
+pillow
+requests
+python-dotenv
