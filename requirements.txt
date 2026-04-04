@@ -4,3 +4,4 @@ python-dotenv
 SpeechRecognition
 Pillow
 requests
+PyPDF2
