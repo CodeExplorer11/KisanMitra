@@ -2,4 +2,5 @@ streamlit
 google-generativeai
 python-dotenv
 SpeechRecognition
-pydub
+Pillow
+requests
