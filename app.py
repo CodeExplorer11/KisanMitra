@@ -41,30 +41,27 @@ if not GEMINI_API_KEY:
 # Clean the key
 GEMINI_API_KEY = GEMINI_API_KEY.strip().strip('"').strip("'")
 
-# ========== CONFIGURE GEMINI (CORRECT MODEL NAMES) ==========
-# ========== CONFIGURE GEMINI ==========
+# ========== CONFIGURE GEMINI (FINAL) ==========
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     
-    # List all available models that support generateContent
-    st.write("🔍 **Available models:**")
-    available_models = []
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            available_models.append(m.name)
-            st.write(f"- {m.name}")
+    # Use a model from your available list
+    MODEL_NAME = "models/gemini-3.1-flash-lite-preview"
     
-    if not available_models:
-        st.error("No models available. Check your API key.")
+    model = genai.GenerativeModel(MODEL_NAME)
+    vision_model = genai.GenerativeModel(MODEL_NAME)
+    
+    # Quick test
+    test_response = model.generate_content("Say 'OK'")
+    if test_response:
+        st.success("✅ Gemini API ready!")
+    else:
+        st.error("❌ Model test failed.")
         st.stop()
-    
-    # Use the first available model (usually the best)
-    model_name = available_models[0]
-    st.info(f"✅ Using model: {model_name}")
-    
-    model = genai.GenerativeModel(model_name)
-    vision_model = genai.GenerativeModel(model_name)
-    
+        
+except Exception as e:
+    st.error(f"❌ Gemini error: {e}")
+    st.stop()    
     # Test the API key
     test_response = model.generate_content("Say 'API key works'")
     
