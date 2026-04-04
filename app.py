@@ -46,8 +46,8 @@ try:
     genai.configure(api_key=GEMINI_API_KEY)
     
     # Use the correct model names (gemini-1.5-flash works and is free)
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    vision_model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-pro')
+    vision_model = genai.GenerativeModel('gemini-1.5-pro')
     
     # Test the API key
     test_response = model.generate_content("Say 'API key works'")
