@@ -176,6 +176,10 @@ if "lang_pref" not in st.session_state:
     st.session_state.lang_pref = "English"
 if "farmer_profile" not in st.session_state:
     st.session_state.farmer_profile = ""
+if "chat_listen" not in st.session_state:
+    st.session_state.chat_listen = False
+if "chat_query" not in st.session_state:
+    st.session_state.chat_query = ""
 
 # ========== CUSTOM CSS ==========
 st.markdown("""
@@ -247,6 +251,48 @@ with st.sidebar:
     if help_q:
         help_ans = get_help_response(help_q)
         st.info(help_ans)
+        st.markdown("---")
+    st.subheader("🤖 Chat Assistant")
+    st.caption("Ask me anything (voice or text)")
+    
+   
+   
+# Voice input for chat
+    chat_audio = st.audio_input("🎤 Tap to speak", key="chat_audio", label_visibility="collapsed")
+    if chat_audio:
+        with st.spinner("Transcribing..."):
+            transcribed = transcribe_audio(chat_audio.getvalue())
+        if transcribed:
+            st.session_state.chat_query = transcribed
+            st.rerun()
+    
+    # Text input
+    chat_query = st.text_input("", placeholder="Or type your question...", key="chat_text")
+    
+    # Process query from either voice or text
+    query = None
+    if "chat_query" in st.session_state and st.session_state.chat_query:
+        query = st.session_state.chat_query
+        # Clear after use
+        del st.session_state.chat_query
+    elif chat_query:
+        query = chat_query
+    
+    if query:
+        with st.spinner("🤔 Thinking..."):
+            answer = chatbot_response(query, st.session_state.lang_pref)
+        st.success("💬 " + answer)
+        # Auto-speak answer
+        safe_answer = json.dumps(answer)
+        speak_js = f"""
+        <script>
+            var utterance = new SpeechSynthesisUtterance({safe_answer});
+            utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+            window.speechSynthesis.speak(utterance);
+        </script>
+        """
+        st.components.v1.html(speak_js, height=0)
+        # Save to a separate chat history if you want, but not necessary
 # For GPS location (works in mobile browser)
 GPS_HTML = """
 <div id="gps-container">
@@ -510,6 +556,75 @@ def get_city_from_coords(lat, lon):
         return city if city else "Your Location"
     except:
         return "Your Location"
+
+    st.markdown("---")
+    st.subheader("🤖 Chat Assistant")
+    
+    # Microphone button that triggers greeting and listens
+    if st.button("🎤 Ask Chatbot", key="chat_trigger"):
+        # Greeting in Hindi
+        greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
+        st.info("🤖 " + greeting)
+        # Speak greeting
+        safe_greet = json.dumps(greeting)
+        greet_js = f"""
+        <script>
+            var u = new SpeechSynthesisUtterance({safe_greet});
+            u.lang = 'hi-IN';
+            window.speechSynthesis.speak(u);
+        </script>
+        """
+        st.components.v1.html(greet_js, height=0)
+        # Then listen for user voice
+        st.session_state.chat_listen = True
+    
+    # If listening flag set, show audio input
+    if st.session_state.get("chat_listen", False):
+        chat_audio = st.audio_input("Speak your question now", key="chat_audio_listen")
+        if chat_audio:
+            with st.spinner("Transcribing..."):
+                transcribed = transcribe_audio(chat_audio.getvalue())
+            if transcribed:
+                st.session_state.chat_listen = False
+                st.session_state.chat_query = transcribed
+                st.rerun()
+    
+    # Text input as fallback
+    chat_text = st.text_input("Or type your question", key="chat_text_input")
+    if chat_text:
+        st.session_state.chat_query = chat_text
+    
+    # Process query
+    if "chat_query" in st.session_state and st.session_state.chat_query:
+        q = st.session_state.chat_query
+        with st.spinner("Thinking..."):
+            ans = chatbot_response(q, st.session_state.lang_pref)
+        st.success(f"💬 {ans}")
+        # Speak answer
+        safe_ans = json.dumps(ans)
+        speak_js = f"""
+        <script>
+            var utt = new SpeechSynthesisUtterance({safe_ans});
+            utt.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+            window.speechSynthesis.speak(utt);
+        </script>
+        """
+        st.components.v1.html(speak_js, height=0)
+        # Clear query
+        del st.session_state.chat_query
+
+# ========== CHATBOT ASSISTANT ==========
+def chatbot_response(user_input, lang="English"):
+    """Generate friendly chatbot response using Gemini"""
+    prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
+Response language: {lang}
+User says: "{user_input}"
+Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging."""
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except:
+        return "Sorry, I'm having trouble right now. Please try again."
 # ========== MAIN TABS ==========
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5"), "🔄 Crop Rotation"])
 
