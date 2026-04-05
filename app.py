@@ -54,7 +54,7 @@ st.info(f"Using model: {MODEL_NAME}")
 
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
-        
+
 # ========== MULTILINGUAL SUPPORT ==========
 SUPPORTED_LANGS = {
     "en": "English",
@@ -371,9 +371,14 @@ Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encou
     try:
         response = model.generate_content(prompt)
         return response.text
-    except:
-        return "Sorry, I'm having trouble right now. Please try again."
-
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str:
+            return "⚠️ Too many requests. Please wait 1 minute and try again."
+        elif "404" in error_str:
+            return "⚠️ AI model issue. Please refresh the page."
+        else:
+            return f"⚠️ Error: {error_str[:100]}"
 # Help response (optional)
 def get_help_response(user_question):
     help_topics = {
@@ -612,22 +617,17 @@ with tab6:
 # ----- FOOTER -----
 st.markdown("---")
 st.caption(t("footer"))
-# ========== FLOATING CHATBOT POPOVER (BOTTOM RIGHT) ==========
+# ========== FLOATING CHATBOT POPOVER (FIXED) ==========
 with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### 💬 KisanMitra Assistant")
     
+    # Greeting (spoken only once)
     greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
     st.info(greeting)
-    
-    safe_greet = json.dumps(greeting)
-    greet_js = f"""
-    <script>
-        var u = new SpeechSynthesisUtterance({safe_greet});
-        u.lang = 'hi-IN';
-        window.speechSynthesis.speak(u);
-    </script>
-    """
-    st.components.v1.html(greet_js, height=0)
+    if "greeting_spoken" not in st.session_state:
+        safe_greet = json.dumps(greeting)
+        st.components.v1.html(f'<script>new SpeechSynthesisUtterance({safe_greet}); window.speechSynthesis.speak(u);</script>', height=0)
+        st.session_state.greeting_spoken = True
     
     # Voice input
     audio_val = st.audio_input("🎤 Speak your question", key="chat_audio_popover")
@@ -635,28 +635,22 @@ with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about 
         with st.spinner("Transcribing..."):
             text = transcribe_audio(audio_val.getvalue())
         if text:
-            st.session_state.popover_query = text
-            st.rerun()
+            st.markdown(f"🗣️ **You:** {text}")
+            with st.spinner("🤔 Thinking..."):
+                ans = chatbot_response(text, st.session_state.lang_pref)
+            st.success(f"🤖 **Answer:** {ans}")
+            # Speak answer
+            safe_ans = json.dumps(ans)
+            st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({safe_ans}); u.lang="{('hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US')}"; window.speechSynthesis.speak(u);</script>', height=0)
+        else:
+            st.error("Could not understand audio.")
     
     # Text input
     text_q = st.text_input("Or type your question", key="chat_text_popover")
     if text_q:
-        st.session_state.popover_query = text_q
-        st.rerun()
-    
-    # Process query
-    if "popover_query" in st.session_state and st.session_state.popover_query:
-        q = st.session_state.popover_query
-        with st.spinner("Thinking..."):
-            ans = chatbot_response(q, st.session_state.lang_pref)
-        st.success(f"🤖 {ans}")
+        st.markdown(f"🗣️ **You:** {text_q}")
+        with st.spinner("🤔 Thinking..."):
+            ans = chatbot_response(text_q, st.session_state.lang_pref)
+        st.success(f"🤖 **Answer:** {ans}")
         safe_ans = json.dumps(ans)
-        speak_js = f"""
-        <script>
-            var u2 = new SpeechSynthesisUtterance({safe_ans});
-            u2.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
-            window.speechSynthesis.speak(u2);
-        </script>
-        """
-        st.components.v1.html(speak_js, height=0)
-        del st.session_state.popover_query
+        st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({safe_ans}); u.lang="{('hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US')}"; window.speechSynthesis.speak(u);</script>', height=0)
