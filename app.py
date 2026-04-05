@@ -64,9 +64,6 @@ except Exception as e:
     st.error(f"❌ Gemini error: {e}")
     st.stop()    
         
-except Exception as e:
-    st.error(f"❌ Gemini configuration failed: {e}")
-    st.stop()
 # ========== MULTILINGUAL SUPPORT ==========
 SUPPORTED_LANGS = {
     "en": "English",
@@ -180,6 +177,8 @@ if "chat_listen" not in st.session_state:
     st.session_state.chat_listen = False
 if "chat_query" not in st.session_state:
     st.session_state.chat_query = ""
+if "popover_query" not in st.session_state:
+    st.session_state.popover_query = ""
 
 # ========== CUSTOM CSS ==========
 st.markdown("""
@@ -225,127 +224,7 @@ with st.sidebar:
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
 # ========== HELPER FUNCTIONS ==========
-# ----- HELPER CHATBOT -----
-def get_help_response(user_question):
-    """Answer questions about using the app"""
-    help_topics = {
-        "gps": "To use GPS: Tap 'Use My Current Location' button. Allow location permission when browser asks.",
-        "voice": "Tap the microphone button, speak clearly in Hindi or English, then wait for AI response.",
-        "soil": "Upload a photo of your soil or a PDF lab report. AI will analyze and give advice.",
-        "crop rotation": "Go to Crop Rotation tab. Select previous and next crop to get advice.",
-        "weather": "Enter city name or use GPS. Get today + tomorrow forecast with farming tips."
-    }
-    
-    q_lower = user_question.lower()
-    for key, answer in help_topics.items():
-        if key in q_lower:
-            return answer
-    return "I can help with: GPS usage, voice commands, soil analysis, crop rotation, and weather. What would you like to know?"
 
-# Add a Help button in sidebar or as a new tab
-with st.sidebar:
-    # ... existing sidebar code ...
-    st.markdown("---")
-    st.subheader("🆘 Need Help?")
-    help_q = st.text_input("Ask how to use...")
-    if help_q:
-        help_ans = get_help_response(help_q)
-        st.info(help_ans)
-        st.markdown("---")
-    st.subheader("🤖 Chat Assistant")
-    st.caption("Ask me anything (voice or text)")
-    
-   
-   
-# Voice input for chat
-    chat_audio = st.audio_input("🎤 Tap to speak", key="chat_audio", label_visibility="collapsed")
-    if chat_audio:
-        with st.spinner("Transcribing..."):
-            transcribed = transcribe_audio(chat_audio.getvalue())
-        if transcribed:
-            st.session_state.chat_query = transcribed
-            st.rerun()
-    
-    # Text input
-    chat_query = st.text_input("", placeholder="Or type your question...", key="chat_text")
-    
-    # Process query from either voice or text
-    query = None
-    if "chat_query" in st.session_state and st.session_state.chat_query:
-        query = st.session_state.chat_query
-        # Clear after use
-        del st.session_state.chat_query
-    elif chat_query:
-        query = chat_query
-    
-    if query:
-        with st.spinner("🤔 Thinking..."):
-            answer = chatbot_response(query, st.session_state.lang_pref)
-        st.success("💬 " + answer)
-        # Auto-speak answer
-        safe_answer = json.dumps(answer)
-        speak_js = f"""
-        <script>
-            var utterance = new SpeechSynthesisUtterance({safe_answer});
-            utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
-            window.speechSynthesis.speak(utterance);
-        </script>
-        """
-        st.components.v1.html(speak_js, height=0)
-        # Save to a separate chat history if you want, but not necessary
-# For GPS location (works in mobile browser)
-GPS_HTML = """
-<div id="gps-container">
-    <button id="get-location" style="background-color:#4CAF50; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">
-        📍 Use My Current Location
-    </button>
-    <p id="location-status" style="margin-top:10px; color:#666;"></p>
-</div>
-<script>
-    const btn = document.getElementById('get-location');
-    const status = document.getElementById('location-status');
-    
-    btn.addEventListener('click', function() {
-        if ('geolocation' in navigator) {
-            status.innerHTML = "📍 Getting your location...";
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                status.innerHTML = "✅ Location captured! City detected.";
-                // Send to Streamlit
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '';
-                const latInput = document.createElement('input');
-                latInput.name = 'latitude';
-                latInput.value = lat;
-                const lonInput = document.createElement('input');
-                lonInput.name = 'longitude';
-                lonInput.value = lon;
-                form.appendChild(latInput);
-                form.appendChild(lonInput);
-                document.body.appendChild(form);
-                form.submit();
-            }, function(error) {
-                status.innerHTML = "❌ Could not get location. Please allow permission.";
-            });
-        } else {
-            status.innerHTML = "❌ GPS not supported on this browser.";
-        }
-    });
-</script>
-"""
-
-def get_city_from_coords(lat, lon):
-    """Convert coordinates to city name (reverse geocoding)"""
-    try:
-        # Using OpenStreetMap Nominatim (free, no key)
-        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
-        response = requests.get(url, headers={'User-Agent': 'KisanMitra'})
-        data = response.json()
-        return data.get('address', {}).get('city', data.get('address', {}).get('town', 'Your Location'))
-    except:
-        return "Your Location"
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -368,39 +247,30 @@ Give a short, practical, actionable answer (max 3 sentences)."""
 
 def get_weather(city):
     return {"temp": 28, "humidity": 65, "description": "clear sky", "city": city}
+
 def get_weather_forecast(city):
-    """Get today + tomorrow's weather with farming advice"""
-    # For demo, return structured data
-    # With real API key, you'd call OpenWeatherMap forecast endpoint
     return {
         "today": {
-            "temp": 32,
-            "humidity": 65,
-            "condition": "Sunny",
-            "suitable": True,
-            "advice": "Good day for sowing and fertilizer application."
+            "temp": 32, "humidity": 65, "condition": "Sunny",
+            "suitable": True, "advice": "Good day for sowing."
         },
         "tomorrow": {
-            "temp": 28,
-            "humidity": 80,
-            "condition": "Light rain expected",
-            "suitable": False,
-            "advice": "Avoid spraying pesticides. Cover harvested crops. Postpone irrigation."
+            "temp": 28, "humidity": 80, "condition": "Light rain expected",
+            "suitable": False, "advice": "Avoid spraying pesticides."
         }
     }
 
 def get_farming_advice_for_weather(weather_data):
-    """Generate specific advice based on weather conditions"""
     advice = []
     if weather_data["temp"] > 35:
-        advice.append("🌡️ High heat: Water crops in early morning or evening.")
+        advice.append("🌡️ High heat: Water crops early morning.")
     if weather_data["humidity"] > 75:
-        advice.append("💧 High humidity risk: Watch for fungal diseases.")
+        advice.append("💧 High humidity: Watch for fungal diseases.")
     if "rain" in weather_data["condition"].lower():
-        advice.append("☔ Rain expected: Harvest ripe crops today. Cover stored produce.")
+        advice.append("☔ Rain expected: Harvest ripe crops today.")
     if weather_data["temp"] < 15:
-        advice.append("❄️ Cold alert: Protect young plants with mulch.")
-    return advice if advice else ["✅ Weather is suitable for normal farming activities."]
+        advice.append("❄️ Cold alert: Protect young plants.")
+    return advice if advice else ["✅ Weather suitable for normal farming."]
 
 def get_mandi_price(commodity, state="Uttar Pradesh"):
     mock_prices = {
@@ -455,55 +325,54 @@ def get_personalized_advice(profile, question):
         return model.generate_content(prompt).text
     except:
         return "AI temporarily unavailable."
-# Crop rotation data (can be expanded)
+
+# Crop rotation
 CROP_ROTATION = {
-    "sugarcane": {
-        "next_crops": ["wheat", "mustard", "potato"],
-        "advice": "Sugarcane depletes nitrogen. Grow wheat or mustard with extra nitrogen fertilizer.",
-        "soil_condition": "Phosphorus levels are adequate. Add 20% more nitrogen."
-    },
-    "wheat": {
-        "next_crops": ["rice", "maize", "pulses"],
-        "advice": "Wheat leaves residual phosphorus. Good for legumes like chickpea.",
-        "soil_condition": "Phosphorus is sufficient. Reduce DAP by 25%."
-    },
-    "rice": {
-        "next_crops": ["wheat", "mustard", "vegetables"],
-        "advice": "Rice depletes zinc. Apply zinc sulfate before next crop.",
-        "soil_condition": "Zinc deficiency likely. Add organic matter."
-    },
-    "potato": {
-        "next_crops": ["maize", "onion", "cabbage"],
-        "advice": "Potato depletes potassium. Add potash for next crop.",
-        "soil_condition": "Potassium low. Use NPK 20:20:20."
-    },
-    "tomato": {
-        "next_crops": ["beans", "peas", "cucumber"],
-        "advice": "Tomato susceptible to same pests. Rotate with legumes.",
-        "soil_condition": "Good for nitrogen-fixing crops."
-    }
+    "sugarcane": {"next_crops": ["wheat", "mustard", "potato"], "advice": "Sugarcane depletes nitrogen. Grow wheat or mustard with extra nitrogen.", "soil_condition": "Phosphorus levels adequate. Add 20% more nitrogen."},
+    "wheat": {"next_crops": ["rice", "maize", "pulses"], "advice": "Wheat leaves residual phosphorus. Good for legumes.", "soil_condition": "Reduce DAP by 25%."},
+    "rice": {"next_crops": ["wheat", "mustard", "vegetables"], "advice": "Rice depletes zinc. Apply zinc sulfate before next crop.", "soil_condition": "Zinc deficiency likely. Add organic matter."},
+    "potato": {"next_crops": ["maize", "onion", "cabbage"], "advice": "Potato depletes potassium. Add potash for next crop.", "soil_condition": "Potassium low. Use NPK 20:20:20."},
+    "tomato": {"next_crops": ["beans", "peas", "cucumber"], "advice": "Tomato susceptible to same pests. Rotate with legumes.", "soil_condition": "Good for nitrogen-fixing crops."}
 }
 
 def get_crop_rotation_advice(previous_crop, next_crop):
-    """Get advice for crop rotation"""
     prev = previous_crop.lower()
     next_c = next_crop.lower()
-    
     if prev in CROP_ROTATION:
         if next_c in CROP_ROTATION[prev]["next_crops"]:
-            return {
-                "suitable": True,
-                "advice": CROP_ROTATION[prev]["advice"],
-                "soil": CROP_ROTATION[prev]["soil_condition"]
-            }
+            return {"suitable": True, "advice": CROP_ROTATION[prev]["advice"], "soil": CROP_ROTATION[prev]["soil_condition"]}
         else:
-            return {
-                "suitable": False,
-                "advice": f"{previous_crop} to {next_crop} is not ideal. Recommended: {', '.join(CROP_ROTATION[prev]['next_crops'])}",
-                "soil": "Consider soil testing before planting."
-            }
+            return {"suitable": False, "advice": f"{previous_crop} to {next_crop} is not ideal. Recommended: {', '.join(CROP_ROTATION[prev]['next_crops'])}", "soil": "Consider soil testing."}
     return {"suitable": True, "advice": "Crop rotation is good for soil health.", "soil": "Add compost before sowing."}
-# ========== GPS & LOCATION ==========
+
+# Chatbot response (must be defined before use)
+def chatbot_response(user_input, lang="English"):
+    prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
+Response language: {lang}
+User says: "{user_input}"
+Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging."""
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except:
+        return "Sorry, I'm having trouble right now. Please try again."
+
+# Help response (optional)
+def get_help_response(user_question):
+    help_topics = {
+        "gps": "To use GPS: Tap 'Use My Current Location' button. Allow location permission.",
+        "voice": "Tap microphone button, speak clearly in Hindi or English.",
+        "soil": "Upload a photo of soil or PDF lab report. AI will analyze.",
+        "crop rotation": "Go to Crop Rotation tab. Select previous and next crop.",
+        "weather": "Enter city name or use GPS. Get today + tomorrow forecast."
+    }
+    q_lower = user_question.lower()
+    for key, answer in help_topics.items():
+        if key in q_lower:
+            return answer
+    return "I can help with: GPS, voice, soil analysis, crop rotation, weather. What would you like to know?"
+
+# GPS HTML (single definition)
 GPS_HTML = """
 <div id="gps-container" style="margin: 10px 0;">
     <button id="get-location" style="background-color:#4CAF50; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; width:100%;">
@@ -514,7 +383,6 @@ GPS_HTML = """
 <script>
     const btn = document.getElementById('get-location');
     const status = document.getElementById('location-status');
-    
     btn.addEventListener('click', function() {
         if ('geolocation' in navigator) {
             status.innerHTML = "📍 Getting your location...";
@@ -522,7 +390,6 @@ GPS_HTML = """
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 status.innerHTML = "✅ Location captured! Getting weather...";
-                // Send to Streamlit via form
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '';
@@ -547,7 +414,6 @@ GPS_HTML = """
 """
 
 def get_city_from_coords(lat, lon):
-    """Convert coordinates to city name using OpenStreetMap (free, no key)"""
     try:
         url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
         response = requests.get(url, headers={'User-Agent': 'KisanMitra'})
@@ -556,75 +422,6 @@ def get_city_from_coords(lat, lon):
         return city if city else "Your Location"
     except:
         return "Your Location"
-
-    st.markdown("---")
-    st.subheader("🤖 Chat Assistant")
-    
-    # Microphone button that triggers greeting and listens
-    if st.button("🎤 Ask Chatbot", key="chat_trigger"):
-        # Greeting in Hindi
-        greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
-        st.info("🤖 " + greeting)
-        # Speak greeting
-        safe_greet = json.dumps(greeting)
-        greet_js = f"""
-        <script>
-            var u = new SpeechSynthesisUtterance({safe_greet});
-            u.lang = 'hi-IN';
-            window.speechSynthesis.speak(u);
-        </script>
-        """
-        st.components.v1.html(greet_js, height=0)
-        # Then listen for user voice
-        st.session_state.chat_listen = True
-    
-    # If listening flag set, show audio input
-    if st.session_state.get("chat_listen", False):
-        chat_audio = st.audio_input("Speak your question now", key="chat_audio_listen")
-        if chat_audio:
-            with st.spinner("Transcribing..."):
-                transcribed = transcribe_audio(chat_audio.getvalue())
-            if transcribed:
-                st.session_state.chat_listen = False
-                st.session_state.chat_query = transcribed
-                st.rerun()
-    
-    # Text input as fallback
-    chat_text = st.text_input("Or type your question", key="chat_text_input")
-    if chat_text:
-        st.session_state.chat_query = chat_text
-    
-    # Process query
-    if "chat_query" in st.session_state and st.session_state.chat_query:
-        q = st.session_state.chat_query
-        with st.spinner("Thinking..."):
-            ans = chatbot_response(q, st.session_state.lang_pref)
-        st.success(f"💬 {ans}")
-        # Speak answer
-        safe_ans = json.dumps(ans)
-        speak_js = f"""
-        <script>
-            var utt = new SpeechSynthesisUtterance({safe_ans});
-            utt.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
-            window.speechSynthesis.speak(utt);
-        </script>
-        """
-        st.components.v1.html(speak_js, height=0)
-        # Clear query
-        del st.session_state.chat_query
-
-# ========== CHATBOT ASSISTANT ==========
-def chatbot_response(user_input, lang="English"):
-    """Generate friendly chatbot response using Gemini"""
-    prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
-Response language: {lang}
-User says: "{user_input}"
-Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging."""
-    try:
-        response = model.generate_content(prompt)
-        return response.text
-    except:
-        return "Sorry, I'm having trouble right now. Please try again."
 # ========== MAIN TABS ==========
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5"), "🔄 Crop Rotation"])
 
@@ -718,7 +515,7 @@ with tab3:
         col1.metric("Temperature", f"{w['temp']}°C")
         col2.metric("Humidity", f"{w['humidity']}%")
         col3.metric("Condition", w['description'].title())
-        st.stop()  # Prevent duplicate display
+        
     
     if st.button(t("weather_btn")):
         w = get_weather(city)
@@ -796,3 +593,56 @@ with tab6:
 # ----- FOOTER -----
 st.markdown("---")
 st.caption(t("footer"))
+# ========== FLOATING CHATBOT POPOVER (BOTTOM RIGHT) ==========
+with st.popover("🤖", use_container_width=False):
+    st.markdown("### 💬 KisanMitra Assistant")
+    
+    # Greeting in Hindi (spoken and displayed)
+    greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
+    st.info(greeting)
+    
+    # Speak greeting automatically when popover opens
+    
+    safe_greet = json.dumps(greeting)
+    greet_js = f"""
+    <script>
+        var u = new SpeechSynthesisUtterance({safe_greet});
+        u.lang = 'hi-IN';
+        window.speechSynthesis.speak(u);
+    </script>
+    """
+    st.components.v1.html(greet_js, height=0)
+    
+   # Voice input (using st.audio_input)
+audio_val = st.audio_input("🎤 Speak your question", key="chat_audio_popover")
+if audio_val:
+    with st.spinner("Transcribing..."):
+        text = transcribe_audio(audio_val.getvalue())   # reuse your function
+    if text:
+        st.session_state.popover_query = text
+        st.rerun()
+         
+    # Text input as fallback
+    text_q = st.text_input("Or type your question", key="chat_text_popover")
+    if text_q:
+        st.session_state.popover_query = text_q
+        st.rerun()
+    
+    # Process query
+    if "popover_query" in st.session_state and st.session_state.popover_query:
+        q = st.session_state.popover_query
+        with st.spinner("Thinking..."):
+            ans = chatbot_response(q, st.session_state.lang_pref)
+        st.success(f"🤖 {ans}")
+        # Speak answer
+        safe_ans = json.dumps(ans)
+        speak_js = f"""
+        <script>
+            var u2 = new SpeechSynthesisUtterance({safe_ans});
+            u2.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+            window.speechSynthesis.speak(u2);
+        </script>
+        """
+        st.components.v1.html(speak_js, height=0)
+        # Clear query
+        del st.session_state.popover_query
