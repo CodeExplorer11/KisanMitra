@@ -261,13 +261,15 @@ def detect_language(text):
 
 
 def get_ai_response(question, lang):
-    # Auto-detect language from question (override lang parameter)
     detected = detect_language(question)
-    prompt_lang = detected
+    if detected == "Hindi":
+        force_lang = "Hindi. You MUST answer in Hindi using Devanagari script. No English words."
+    else:
+        force_lang = "English"
     prompt = f"""You are KisanMitra, a friendly expert farming assistant.
-Response language: {prompt_lang}
+Response language: {force_lang}
 Farmer asked: "{question}"
-Give a short, practical, actionable answer (max 3 sentences)."""
+Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer in the same language as the question."""
     try:
         response = model.generate_content(prompt)
         return response.text
@@ -376,13 +378,20 @@ def get_crop_rotation_advice(previous_crop, next_crop):
 
 # Chatbot response (must be defined before use)
 def chatbot_response(user_input, lang="English"):
-    # Auto-detect language from input (override passed lang)
+    # Auto-detect language from input
     detected = detect_language(user_input)
-    prompt_lang = detected  # Use detected language for response
+    
+    # Force the response language with explicit instructions
+    if detected == "Hindi":
+        force_lang = """Hindi. You MUST answer in Hindi using Devanagari script (हिंदी). Do not use English words or sentences. Even if the question contains some English words, answer in pure Hindi."""
+    else:
+        force_lang = "English"
+    
     prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
-Response language: {prompt_lang}
+Response language: {force_lang}
 User says: "{user_input}"
-Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging."""
+Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging.
+CRITICAL: If the user spoke in Hindi, you MUST answer in Hindi. Do not mix languages."""
     try:
         response = model.generate_content(prompt)
         return response.text
@@ -477,13 +486,14 @@ with tab1:
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": text, "a": ans})
             
-            # Auto-speak
-            import json
+            # Auto-speak using detected language from answer
+            detected_lang = detect_language(ans)
+            tts_lang = "hi-IN" if detected_lang == "Hindi" else "en-US"
             safe_answer = json.dumps(ans)
             speak_js = f"""
             <script>
                 var utterance = new SpeechSynthesisUtterance({safe_answer});
-                utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+                utterance.lang = '{tts_lang}';
                 window.speechSynthesis.speak(utterance);
             </script>
             """
@@ -501,18 +511,18 @@ with tab1:
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": txt_q, "a": ans})
             
-            # Auto-speak
-            import json
+            # Auto-speak using detected language from answer
+            detected_lang = detect_language(ans)
+            tts_lang = "hi-IN" if detected_lang == "Hindi" else "en-US"
             safe_answer = json.dumps(ans)
             speak_js = f"""
             <script>
                 var utterance = new SpeechSynthesisUtterance({safe_answer});
-                utterance.lang = '{'hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US'}';
+                utterance.lang = '{tts_lang}';
                 window.speechSynthesis.speak(utterance);
             </script>
             """
             st.components.v1.html(speak_js, height=0)
-
 # ----- TAB 2: MARKET PRICES -----
 with tab2:
     st.header(t("market_header"))
@@ -654,9 +664,11 @@ with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about 
             with st.spinner("🤔 Thinking..."):
                 ans = chatbot_response(text)
             st.success(f"🤖 **Answer:** {ans}")
-            # Speak answer
+            # Speak answer using detected language
+            detected_ans_lang = detect_language(ans)
+            tts_lang = "hi-IN" if detected_ans_lang == "Hindi" else "en-US"
             safe_ans = json.dumps(ans)
-            st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({safe_ans}); u.lang="{('hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US')}"; window.speechSynthesis.speak(u);</script>', height=0)
+            st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({safe_ans}); u.lang="{tts_lang}"; window.speechSynthesis.speak(u);</script>', height=0)
         else:
             st.error("Could not understand audio.")
     
@@ -668,4 +680,6 @@ with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about 
             ans = chatbot_response(text_q)
         st.success(f"🤖 **Answer:** {ans}")
         safe_ans = json.dumps(ans)
-        st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({safe_ans}); u.lang="{('hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US')}"; window.speechSynthesis.speak(u);</script>', height=0)
+        detected_ans_lang = detect_language(ans)
+        tts_lang = "hi-IN" if detected_ans_lang == "Hindi" else "en-US"
+        st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({safe_ans}); u.lang="{tts_lang}"; window.speechSynthesis.speak(u);</script>', height=0)
