@@ -642,17 +642,10 @@ with tab6:
 # ----- FOOTER -----
 st.markdown("---")
 st.caption(t("footer"))
-# ========== FLOATING CHATBOT POPOVER (FIXED) ==========
+# ========== FLOATING CHATBOT POPOVER ==========
 with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### 💬 KisanMitra Assistant")
-    
-    # Greeting (spoken only once)
-    greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
-    st.info(greeting)
-    if "greeting_spoken" not in st.session_state:
-        safe_greet = json.dumps(greeting)
-        st.components.v1.html(f'<script>var u = new SpeechSynthesisUtterance({safe_greet}); u.lang="hi-IN"; window.speechSynthesis.speak(u);</script>', height=0)
-        st.session_state.greeting_spoken = True
+    st.info("नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?")
     
     # Voice input
     audio_val = st.audio_input("🎤 Speak your question", key="chat_audio_popover")
