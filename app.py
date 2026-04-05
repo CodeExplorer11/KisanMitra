@@ -47,7 +47,7 @@ try:
     genai.configure(api_key=GEMINI_API_KEY)
     
     # Use a model from your available list
-    MODEL_NAME = "models/gemini-3.1-flash-lite-preview"
+    MODEL_NAME = "gemini-1.5-flash"
     
     model = genai.GenerativeModel(MODEL_NAME)
     vision_model = genai.GenerativeModel(MODEL_NAME)
@@ -190,6 +190,32 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: #fff7e8; border-radius: 40px; padding: 6px; }
     .stTabs [data-baseweb="tab"] { border-radius: 40px; padding: 8px 20px; background-color: #ffe6cc; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #ff8c00; color: white; }
+</style>
+""", unsafe_allow_html=True)
+st.markdown("""
+<style>
+    /* Make the popover button (robot icon) large and orange */
+    [data-testid="stPopover"] button {
+        background-color: #ff8c00 !important;
+        color: white !important;
+        font-size: 22px !important;
+        padding: 10px 18px !important;
+        border-radius: 50px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stPopover"] button:hover {
+        background-color: #e67600 !important;
+    }
+    /* Optional: add a pulsing animation to attract attention */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    [data-testid="stPopover"] button {
+        animation: pulse 2s infinite;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -596,14 +622,12 @@ with tab6:
 st.markdown("---")
 st.caption(t("footer"))
 # ========== FLOATING CHATBOT POPOVER (BOTTOM RIGHT) ==========
-with st.popover("🤖", use_container_width=False):
+with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### 💬 KisanMitra Assistant")
     
-    # Greeting in Hindi (spoken and displayed)
     greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
     st.info(greeting)
     
-    # Speak greeting automatically when popover opens
     safe_greet = json.dumps(greeting)
     greet_js = f"""
     <script>
@@ -614,7 +638,7 @@ with st.popover("🤖", use_container_width=False):
     """
     st.components.v1.html(greet_js, height=0)
     
-    # Voice input (using st.audio_input)
+    # Voice input
     audio_val = st.audio_input("🎤 Speak your question", key="chat_audio_popover")
     if audio_val:
         with st.spinner("Transcribing..."):
@@ -623,7 +647,7 @@ with st.popover("🤖", use_container_width=False):
             st.session_state.popover_query = text
             st.rerun()
     
-    # Text input as fallback
+    # Text input
     text_q = st.text_input("Or type your question", key="chat_text_popover")
     if text_q:
         st.session_state.popover_query = text_q
@@ -635,7 +659,6 @@ with st.popover("🤖", use_container_width=False):
         with st.spinner("Thinking..."):
             ans = chatbot_response(q, st.session_state.lang_pref)
         st.success(f"🤖 {ans}")
-        # Speak answer
         safe_ans = json.dumps(ans)
         speak_js = f"""
         <script>
@@ -645,5 +668,4 @@ with st.popover("🤖", use_container_width=False):
         </script>
         """
         st.components.v1.html(speak_js, height=0)
-        # Clear query
         del st.session_state.popover_query
