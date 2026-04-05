@@ -251,9 +251,21 @@ def transcribe_audio(audio_bytes):
     except:
         return None
 
+def detect_language(text):
+    """Detect if text contains Hindi characters"""
+    # Check for Devanagari script (Hindi)
+    if any('\u0900' <= c <= '\u097f' for c in text):
+        return "Hindi"
+    else:
+        return "English"
+
+
 def get_ai_response(question, lang):
+    # Auto-detect language from question (override lang parameter)
+    detected = detect_language(question)
+    prompt_lang = detected
     prompt = f"""You are KisanMitra, a friendly expert farming assistant.
-Response language: {lang}
+Response language: {prompt_lang}
 Farmer asked: "{question}"
 Give a short, practical, actionable answer (max 3 sentences)."""
     try:
@@ -364,8 +376,11 @@ def get_crop_rotation_advice(previous_crop, next_crop):
 
 # Chatbot response (must be defined before use)
 def chatbot_response(user_input, lang="English"):
+    # Auto-detect language from input (override passed lang)
+    detected = detect_language(user_input)
+    prompt_lang = detected  # Use detected language for response
     prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
-Response language: {lang}
+Response language: {prompt_lang}
 User says: "{user_input}"
 Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging."""
     try:
@@ -379,7 +394,7 @@ Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encou
             return "⚠️ AI model issue. Please refresh the page."
         else:
             return f"⚠️ Error: {error_str[:100]}"
-# Help response (optional)
+    # Help response (optional)
 def get_help_response(user_question):
     help_topics = {
         "gps": "To use GPS: Tap 'Use My Current Location' button. Allow location permission.",
@@ -626,7 +641,7 @@ with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about 
     st.info(greeting)
     if "greeting_spoken" not in st.session_state:
         safe_greet = json.dumps(greeting)
-        st.components.v1.html(f'<script>new SpeechSynthesisUtterance({safe_greet}); window.speechSynthesis.speak(u);</script>', height=0)
+        st.components.v1.html(f'<script>var u = new SpeechSynthesisUtterance({safe_greet}); u.lang="hi-IN"; window.speechSynthesis.speak(u);</script>', height=0)
         st.session_state.greeting_spoken = True
     
     # Voice input
@@ -637,7 +652,7 @@ with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about 
         if text:
             st.markdown(f"🗣️ **You:** {text}")
             with st.spinner("🤔 Thinking..."):
-                ans = chatbot_response(text, st.session_state.lang_pref)
+                ans = chatbot_response(text)
             st.success(f"🤖 **Answer:** {ans}")
             # Speak answer
             safe_ans = json.dumps(ans)
@@ -650,7 +665,7 @@ with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about 
     if text_q:
         st.markdown(f"🗣️ **You:** {text_q}")
         with st.spinner("🤔 Thinking..."):
-            ans = chatbot_response(text_q, st.session_state.lang_pref)
+            ans = chatbot_response(text_q)
         st.success(f"🤖 **Answer:** {ans}")
         safe_ans = json.dumps(ans)
         st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({safe_ans}); u.lang="{('hi-IN' if st.session_state.lang_pref == "Hindi" else 'en-US')}"; window.speechSynthesis.speak(u);</script>', height=0)
