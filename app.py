@@ -522,7 +522,9 @@ with tab3:
         col1, col2, col3 = st.columns(3)
         col1.metric("Temperature", f"{w['temp']}°C")
         col2.metric("Humidity", f"{w['humidity']}%")
-        col3.metric("Condition", w['description'].title())# ----- TAB 4: SOIL HEALTH -----
+        col3.metric("Condition", w['description'].title())
+        st.session_state.weather_fetched = True
+# ----- TAB 4: SOIL HEALTH -----
 with tab4:
     st.header(t("soil_header"))
     st.subheader(t("soil_photo_option"))
@@ -602,7 +604,6 @@ with st.popover("🤖", use_container_width=False):
     st.info(greeting)
     
     # Speak greeting automatically when popover opens
-    
     safe_greet = json.dumps(greeting)
     greet_js = f"""
     <script>
@@ -613,15 +614,15 @@ with st.popover("🤖", use_container_width=False):
     """
     st.components.v1.html(greet_js, height=0)
     
-   # Voice input (using st.audio_input)
-audio_val = st.audio_input("🎤 Speak your question", key="chat_audio_popover")
-if audio_val:
-    with st.spinner("Transcribing..."):
-        text = transcribe_audio(audio_val.getvalue())   # reuse your function
-    if text:
-        st.session_state.popover_query = text
-        st.rerun()
-         
+    # Voice input (using st.audio_input)
+    audio_val = st.audio_input("🎤 Speak your question", key="chat_audio_popover")
+    if audio_val:
+        with st.spinner("Transcribing..."):
+            text = transcribe_audio(audio_val.getvalue())
+        if text:
+            st.session_state.popover_query = text
+            st.rerun()
+    
     # Text input as fallback
     text_q = st.text_input("Or type your question", key="chat_text_popover")
     if text_q:
