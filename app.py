@@ -390,6 +390,10 @@ GPS_HTML = """
     <button id="gps-btn" style="background:#7a5c2e; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-size:16px;">📍 Use My Location</button>
     <p id="gps-status" style="margin-top:8px; font-size:0.85rem; color:#5c4b2f;"></p>
 </div>
+<form id="gps-form" method="post" action="">
+    <input type="hidden" name="gps_lat" id="gps_lat">
+    <input type="hidden" name="gps_lon" id="gps_lon">
+</form>
 <script>
     const btn = document.getElementById('gps-btn');
     const status = document.getElementById('gps-status');
@@ -398,25 +402,25 @@ GPS_HTML = """
             status.innerText = "❌ GPS not supported by your browser.";
             return;
         }
-        status.innerText = "🔍 Requesting location... Please allow permission when the browser asks.";
+        status.innerText = "📍 Requesting location... Please allow permission when the browser asks.";
         navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                document.getElementById('gps_lat').value = lat;
+                document.getElementById('gps_lon').value = lon;
+                document.getElementById('gps-form').submit();
                 status.innerText = "✅ Location captured! Refreshing...";
-                const url = new URL(window.location.href);
-                url.searchParams.set('gps_lat', lat);
-                url.searchParams.set('gps_lon', lon);
-                window.location.href = url.toString();
             },
-            (err) => {
+            (error) => {
                 let msg = "❌ Location permission denied. ";
-                if (err.code === 1) msg += "Please allow location access in browser settings.";
-                else if (err.code === 2) msg += "Location unavailable. Try again.";
-                else msg += "Unknown error. Please refresh and try again.";
+                if (error.code === 1) msg += "Tap the lock icon in address bar and allow location.";
+                else if (error.code === 2) msg += "Location unavailable. Ensure GPS is on.";
+                else msg += "Unknown error. Try again.";
                 status.innerText = msg;
-                console.error(err);
-            }
+                console.error(error);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
         );
     };
 </script>
@@ -527,19 +531,20 @@ with tab3:
     st.markdown(GPS_HTML, unsafe_allow_html=True)
     st.caption(t("weather_or"))
     
-    # Process GPS coordinates from URL parameters
-    if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
-        try:
-            lat = float(st.query_params["gps_lat"])
-            lon = float(st.query_params["gps_lon"])
-            city = get_city_from_coords(lat, lon)
-            st.session_state.weather_city_from_gps = city
-            st.success(f"📍 Location detected: {city}")
-            # Clear query params to avoid repeated processing
-            st.query_params.clear()
-            st.rerun()
-        except:
-            pass
+    # Process GPS coordinates from form submission (POST)
+if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
+    lat = st.query_params.get("gps_lat")
+    lon = st.query_params.get("gps_lon")
+    try:
+        lat = float(lat); lon = float(lon)
+        city = get_city_from_coords(lat, lon)
+        st.session_state.weather_city_from_gps = city
+        st.success(f"📍 Location detected: {city}")
+        # Clear query params
+        st.query_params.clear()
+        st.rerun()
+    except:
+        pass
     
     manual_city = st.text_input(t("weather_city"), "Lucknow")
     city = manual_city
