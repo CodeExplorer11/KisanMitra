@@ -11,7 +11,7 @@ import json
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== LANDING PAGE (Classic, light green, simple) ==========
+# ========== LANDING PAGE (with reliable image) ==========
 if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
@@ -51,7 +51,7 @@ if not st.session_state.entered_app:
     <div class="landing-card">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-subtitle">Voice‑First Farming Companion</div>
-        <img src="https://cdn.pixabay.com/photo/2020/09/18/06/29/farmer-5582259_640.jpg" class="landing-image">
+        <img src="https://images.pexels.com/photos/158677/farmer-agriculture-tractor-field-158677.jpeg?auto=compress&cs=tinysrgb&w=400" class="landing-image">
         <p style="margin-top:1rem;">Tap below to begin</p>
     </div>
     """, unsafe_allow_html=True)
@@ -62,7 +62,7 @@ if not st.session_state.entered_app:
             st.rerun()
     st.stop()
 
-# ========== MAIN APP (All original features preserved) ==========
+# ========== MAIN APP ==========
 # ---------- Load API Keys ----------
 GEMINI_API_KEY = None
 try:
@@ -129,7 +129,7 @@ if "lang_pref" not in st.session_state: st.session_state.lang_pref = "English"
 if "farmer_profile" not in st.session_state: st.session_state.farmer_profile = ""
 if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
 
-# ---------- Light Green CSS (classic, less clutter) ----------
+# ---------- Light Green CSS ----------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -168,7 +168,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions (full original set) ----------
+# ---------- Helper Functions ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -191,7 +191,6 @@ Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer i
     except Exception as e: return f"⚠️ AI error: {str(e)}"
 
 def get_weather_forecast(city):
-    # Simulated forecast (replace with real API if key available)
     return {
         "today": {"temp": 32, "humidity": 65, "condition": "Sunny", "advice": "Good for sowing."},
         "tomorrow": {"temp": 28, "humidity": 85, "condition": "Heavy rain expected", "advice": "Avoid spraying pesticides."}
@@ -274,7 +273,53 @@ def get_kvk_by_district(district):
             return center
     return None
 
-GPS_HTML = """<div><button id="get-location" style="background:#4CAF50; color:white; padding:8px 16px; border:none; border-radius:30px; cursor:pointer;">📍 Use My Location</button><p id="status" style="margin-top:8px;"></p></div><script>const btn=document.getElementById('get-location'),status=document.getElementById('status');btn.onclick=function(){if('geolocation' in navigator){status.innerHTML="Getting location...";navigator.geolocation.getCurrentPosition(function(p){status.innerHTML="Location captured!";const form=document.createElement('form');form.method='POST';form.action='';const lat=document.createElement('input');lat.name='latitude';lat.value=p.coords.latitude;const lon=document.createElement('input');lon.name='longitude';lon.value=p.coords.longitude;form.appendChild(lat);form.appendChild(lon);document.body.appendChild(form);form.submit();},function(){status.innerHTML="Permission denied.";});}else{status.innerHTML="GPS not supported.";}};</script>"""
+# FIXED GPS HTML: only submits if location is successfully obtained, otherwise shows error and does not trigger weather
+GPS_HTML = """
+<div id="gps-container">
+    <button id="get-location" style="background:#4CAF50; color:white; padding:8px 16px; border:none; border-radius:30px; cursor:pointer;">📍 Use My Current Location</button>
+    <p id="gps-status" style="margin-top:8px; font-size:0.8rem; color:#555;"></p>
+</div>
+<script>
+    const btn = document.getElementById('get-location');
+    const statusDiv = document.getElementById('gps-status');
+    btn.onclick = function() {
+        if (!('geolocation' in navigator)) {
+            statusDiv.innerHTML = "❌ GPS not supported on this browser.";
+            return;
+        }
+        statusDiv.innerHTML = "📍 Getting location...";
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            statusDiv.innerHTML = "✅ Location captured! Getting weather...";
+            // Create form and submit to Streamlit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '';
+            const latInput = document.createElement('input');
+            latInput.name = 'latitude';
+            latInput.value = lat;
+            const lonInput = document.createElement('input');
+            lonInput.name = 'longitude';
+            lonInput.value = lon;
+            form.appendChild(latInput);
+            form.appendChild(lonInput);
+            document.body.appendChild(form);
+            form.submit();
+        }, function(error) {
+            let errMsg = "";
+            switch(error.code) {
+                case error.PERMISSION_DENIED: errMsg = "❌ Location permission denied. Please enable location in your browser settings."; break;
+                case error.POSITION_UNAVAILABLE: errMsg = "❌ Location unavailable. Try entering city manually."; break;
+                case error.TIMEOUT: errMsg = "❌ Location request timed out."; break;
+                default: errMsg = "❌ Could not get location.";
+            }
+            statusDiv.innerHTML = errMsg;
+        });
+    };
+</script>
+"""
+
 def get_city_from_coords(lat, lon):
     try:
         r = requests.get(f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json", headers={'User-Agent':'KisanMitra'})
@@ -338,15 +383,16 @@ with tab2:
             st.metric("Price per quintal", f"₹{p['price']}")
             st.caption(f"Source: {p['source']}")
 
-# ----- TAB 3: WEATHER (with forecast & alerts) -----
+# ----- TAB 3: WEATHER (with GPS fix) -----
 with tab3:
     st.header("Weather & Alerts")
     st.markdown(GPS_HTML, unsafe_allow_html=True)
     st.caption("— OR —")
     city = st.text_input("Enter district/city name", "Lucknow")
-    if st.button("Get Weather") or ("latitude" in st.query_params):
-        if "latitude" in st.query_params:
-            lat, lon = st.query_params["latitude"], st.query_params["longitude"]
+    if st.button("Get Weather") or ("latitude" in st.query_params and "longitude" in st.query_params):
+        if "latitude" in st.query_params and "longitude" in st.query_params:
+            lat = st.query_params["latitude"]
+            lon = st.query_params["longitude"]
             city = get_city_from_coords(lat, lon)
             st.success(f"📍 Location detected: {city}")
         forecast = get_weather_forecast(city)
@@ -367,7 +413,7 @@ with tab3:
         for adv in advice_list:
             st.write(f"- {adv}")
 
-# ----- TAB 4: SOIL HEALTH (full options) -----
+# ----- TAB 4: SOIL HEALTH -----
 with tab4:
     st.header("Soil Health Analysis")
     st.subheader("Option 1: Upload a photo of your soil")
@@ -411,7 +457,7 @@ with tab5:
                 advice = get_personalized_advice(st.session_state.farmer_profile, question)
                 st.markdown(f'<div class="bot-msg">🎯 {advice}</div>', unsafe_allow_html=True)
 
-# ----- TAB 6: CROP ROTATION (with Gemini) -----
+# ----- TAB 6: CROP ROTATION -----
 with tab6:
     st.header("Crop Rotation Advisor")
     col1, col2 = st.columns(2)
@@ -427,7 +473,7 @@ with tab6:
             detailed = model.generate_content(prompt)
             st.markdown(f'<div class="bot-msg">🤖 <strong>AI Suggestion:</strong><br>{detailed.text}</div>', unsafe_allow_html=True)
 
-# ----- TAB 7: WOMEN EMPOWERMENT (full details) -----
+# ----- TAB 7: WOMEN EMPOWERMENT -----
 with tab7:
     st.header("Women Farmer Empowerment")
     safety_tips = ["🌾 Always inform a family member before going to the field alone.", "📞 Save local police and women’s helpline numbers on speed dial.", "👭 Form a group of women farmers in your village for mutual support.", "🌿 Keep a basic first‑aid kit in your farming bag.", "🚜 Learn about government schemes for women farmers – ask KisanMitra!"]
@@ -457,7 +503,7 @@ with tab7:
             st.write(s["description"])
             st.markdown(f"[🔗 Know More]({s['link']})")
 
-# ----- TAB 8: GOVERNMENT SCHEMES (categorized) -----
+# ----- TAB 8: GOVERNMENT SCHEMES -----
 with tab8:
     st.header("Government Schemes for Farmers")
     categories = sorted(list(set([s['category'] for s in SCHEMES_DATA['schemes']])))
@@ -473,7 +519,7 @@ with tab8:
                 st.write(scheme['description'])
                 st.markdown(f"[🔗 Know More]({scheme['link']})")
 
-# ----- TAB 9: KVK SUPPORT (district lookup) -----
+# ----- TAB 9: KVK SUPPORT -----
 with tab9:
     st.header("Krishi Vigyan Kendra (KVK)")
     st.caption("Find your nearest KVK centre and get expert agricultural support.")
@@ -490,14 +536,20 @@ with tab9:
             st.warning(f"No KVK data available for district: {district}. Please visit [ICAR KVK Portal](https://kvk.icar.gov.in/).")
     st.info("KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.")
 
-# ----- FOOTER & FLOATING CHATBOT (no auto-speak) -----
+# ----- FOOTER -----
 st.markdown("---")
 st.caption("🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!")
 
+# ----- FLOATING CHATBOT WITH SPOKEN GREETING ON OPEN -----
 with st.popover("💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### KisanMitra Assistant")
-    st.info("Ask me anything about farming or using the app.")
-    # No automatic greeting speech
+    greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
+    st.info(greeting)
+    # Speak greeting only once per session when popover is opened
+    if "chatbot_greeting_spoken" not in st.session_state:
+        st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({json.dumps(greeting)}); u.lang="hi-IN"; window.speechSynthesis.speak(u);</script>', height=0)
+        st.session_state.chatbot_greeting_spoken = True
+    
     audio_val = st.audio_input("Speak your question", key="chat_audio_popover")
     if audio_val:
         with st.spinner("Transcribing..."):
