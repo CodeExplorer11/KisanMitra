@@ -80,6 +80,16 @@ if not st.session_state.entered_app:
             st.session_state.entered_app = True
             st.rerun()
     st.stop()
+# ========== PRODUCT HEADER ==========
+st.markdown("""
+<div style='background:#fffaf0;padding:1rem 1.5rem;border-radius:20px;
+border:1px solid #dcc9a2;margin-bottom:1rem'>
+    <h2 style='margin:0;color:#4a3f2b;'>🌾 KisanMitra</h2>
+    <p style='margin:0;color:#6b5a3a;'>
+    AI-powered smart farming assistant for Indian farmers 🇮🇳
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # ========== MAIN APP ==========
 # ---------- Load API Keys ----------
@@ -520,10 +530,35 @@ SCHEMES_DATA = {
         {"category": "Soil Health", "name": "Soil Health Card Scheme", "description": "Free soil testing and nutrient recommendations.", "link": "https://soilhealth.dac.gov.in/"}
     ]
 }
+# ========== FEATURE HIGHLIGHTS ==========
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("### 🌤️ Smart Weather")
+    st.caption("Real-time alerts & farming advice")
+
+with col2:
+    st.markdown("### 🧪 Soil Intelligence")
+    st.caption("Analyze soil via image or reports")
+
+with col3:
+    st.markdown("### 🎤 Voice Assistant")
+    st.caption("Ask farming questions by voice")
+
+st.divider()
 
 # ---------- TABS ----------
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5"), t("tab6"), t("tab7"), t("tab8"), t("tab9")])
-
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+    "🎤 Voice Assistant",
+    "💰 Market Prices",
+    "🌤️ Weather Intelligence",
+    "🧪 Soil Analysis",
+    "📝 AI Advice",
+    "🔄 Crop Rotation",
+    "🚺 Women Empowerment",
+    "📜 Government Schemes",
+    "🌾 KVK Support"
+])
 # ----- TAB 1: VOICE -----
 with tab1:
     st.header(t("voice_header"))
@@ -542,7 +577,8 @@ with tab1:
                 text = transcribe_audio(audio_val.getvalue())
             if text:
                 st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {text}</div>', unsafe_allow_html=True)
-                with st.spinner(t("voice_thinking")):
+                
+                with st.spinner("🤖 KisanMitra is thinking..."):
                     ans = get_ai_response(text, st.session_state.lang_pref)
                 st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
                 st.session_state.history.append({"q": text, "a": ans})
@@ -554,7 +590,9 @@ with tab1:
     txt_q = st.text_input(t("voice_type_placeholder"))
     if st.button(t("voice_ask_btn"), key="ask_text"):
         if txt_q:
-            ans = get_ai_response(txt_q, st.session_state.lang_pref)
+            with st.spinner("🤖 KisanMitra is thinking..."):
+                ans = get_ai_response(txt_q, st.session_state.lang_pref)
+           
             st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {txt_q}</div>', unsafe_allow_html=True)
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": txt_q, "a": ans})
@@ -570,8 +608,14 @@ with tab2:
     if st.button(t("market_btn")):
         if commodity:
             p = get_mandi_price(commodity, state)
-            st.success(f"**{p['commodity']}** in {p['market']}, {p['state']}")
-            st.metric("Price per quintal", f"₹{p['price']}")
+            st.markdown(f"""
+            <div style='background:#fffaf0;padding:1rem;border-radius:15px;
+            border:1px solid #dcc9a2'>
+            <h4 style='margin:0;'>🌾 {p['commodity']}</h4>
+            <p style='margin:0;'>📍 {p['market']}, {p['state']}</p>
+            <h3 style='margin-top:5px;'>₹ {p['price']} / quintal</h3>
+            </div>
+             """, unsafe_allow_html=True)
             st.caption(f"Source: {p['source']}")
 
 # ----- TAB 3: WEATHER -----
@@ -610,8 +654,13 @@ with tab3:
             col1, col2 = st.columns(2)
             with col1:
                 st.write(f"**{t('weather_today')}**")
-                st.write(f"🌡️ {forecast['today']['temp']}{t('weather_temp')}, {forecast['today']['condition']}")
-                st.write(f"💡 {forecast['today']['advice']}")
+                st.markdown(f"""
+                <div class="km-earth-card">
+                <b>🌡️ {forecast['today']['temp']}°C</b><br>
+                {forecast['today']['condition']}<br>
+💡              {forecast['today']['advice']}
+                </div>
+                """, unsafe_allow_html=True)
             with col2:
                 st.write(f"**{t('weather_tomorrow')}**")
                 st.write(f"🌡️ {forecast['tomorrow']['temp']}{t('weather_temp')}, {forecast['tomorrow']['condition']}")
@@ -646,15 +695,15 @@ with tab4:
     soil_input = st.text_area("")
     if st.button(t("soil_manual_btn")):
         if soil_input:
-            advice = get_soil_advice(soil_input)
-            st.markdown(f'<div class="bot-msg">📋 {advice}</div>', unsafe_allow_html=True)
+            damage_type = st.selectbox(t("crop_damage_type"), ["Waterlogging", "Hailstorm", "Strong wind"])
+        advice = get_soil_advice(soil_input)
+        st.markdown(f'<div class="bot-msg">📋 {advice}</div>', unsafe_allow_html=True)
 
 # ----- TAB 5: PERSONALIZED ADVICE -----
 with tab5:
     st.header(t("personalized_header"))
     st.subheader(t("crop_damage_header"))
     damage_crop = st.selectbox(t("crop_damage_crop"), ["Wheat", "Rice", "Pulses"])
-    damage_type = st.selectbox(t("crop_damage_type"), ["Waterlogging", "Hailstorm", "Strong wind"])
     if st.button(t("crop_damage_btn"), key="recovery_btn"):
         advice = get_crop_damage_advice(damage_crop, damage_type, st.session_state.lang_pref)
         st.markdown(f'<div class="bot-msg">🌿 {advice}</div>', unsafe_allow_html=True)
@@ -753,6 +802,12 @@ with tab9:
             st.warning(f"No KVK data available for district: {district}. Please visit [ICAR KVK Portal](https://kvk.icar.gov.in/).")
     st.info(t("kvk_info"))
 
+st.markdown("""
+<div style='text-align:center;padding:0.8rem;color:#5c4b2f;font-size:0.9rem'>
+✅ AI Powered &nbsp;&nbsp; | &nbsp;&nbsp; 🇮🇳 Built for Indian Farmers &nbsp;&nbsp; | &nbsp;&nbsp; 🌱 Data Driven
+</div>
+""", unsafe_allow_html=True)
+
 # ----- FOOTER & CHATBOT -----
 st.markdown("---")
 st.caption(t("footer"))
@@ -783,3 +838,10 @@ with st.popover("💬 Help", use_container_width=False, help="Ask me about farmi
             ans = chatbot_response(text_q, st.session_state.lang_pref)
         st.success(f"🤖 **Answer:** {ans}")
         speak_text(ans, "Hindi" if detect_language(ans) == "Hindi" else "English")
+with st.expander("🚀 Future Scope"):
+    st.write("""
+- 📱 Mobile app for rural accessibility  
+- 🌐 Regional language expansion (10+ languages)  
+- 📡 Live satellite + weather integration  
+- 🛒 Direct farmer-to-market marketplace  
+""")
