@@ -532,19 +532,19 @@ with tab3:
     st.caption(t("weather_or"))
     
     # Process GPS coordinates from form submission (POST)
-if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
-    lat = st.query_params.get("gps_lat")
-    lon = st.query_params.get("gps_lon")
-    try:
-        lat = float(lat); lon = float(lon)
-        city = get_city_from_coords(lat, lon)
-        st.session_state.weather_city_from_gps = city
-        st.success(f"📍 Location detected: {city}")
-        # Clear query params
-        st.query_params.clear()
-        st.rerun()
-    except:
-        pass
+    if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
+        lat = st.query_params.get("gps_lat")
+        lon = st.query_params.get("gps_lon")
+        try:
+            lat = float(lat); lon = float(lon)
+            city = get_city_from_coords(lat, lon)
+            st.session_state.weather_city_from_gps = city
+            st.success(f"📍 Location detected: {city}")
+            # Clear query params to avoid reprocessing
+            st.query_params.clear()
+            st.rerun()
+        except:
+            pass
     
     manual_city = st.text_input(t("weather_city"), "Lucknow")
     city = manual_city
@@ -607,7 +607,6 @@ if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
             st.write(f"- {adv}")
     else:
         st.info("Click 'Get Weather' or 'Refresh Weather' to see forecast and alerts.")
-
 # ----- TAB 4: SOIL -----
 with tab4:
     st.header(t("soil_header"))
