@@ -11,7 +11,7 @@ import json
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== LANDING PAGE (with reliable image) ==========
+# ========== LANDING PAGE (image fixed) ==========
 if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
@@ -51,7 +51,7 @@ if not st.session_state.entered_app:
     <div class="landing-card">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-subtitle">Voice‑First Farming Companion</div>
-        <img src="https://images.pexels.com/photos/158677/farmer-agriculture-tractor-field-158677.jpeg?auto=compress&cs=tinysrgb&w=400" class="landing-image">
+        <img src="https://images.pexels.com/photos/158161/field-wheat-yellow-grain-158161.jpeg?auto=compress&cs=tinysrgb&w=600" class="landing-image">
         <p style="margin-top:1rem;">Tap below to begin</p>
     </div>
     """, unsafe_allow_html=True)
@@ -128,6 +128,7 @@ if "history" not in st.session_state: st.session_state.history = []
 if "lang_pref" not in st.session_state: st.session_state.lang_pref = "English"
 if "farmer_profile" not in st.session_state: st.session_state.farmer_profile = ""
 if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
+if "greeting_spoken" not in st.session_state: st.session_state.greeting_spoken = False
 
 # ---------- Light Green CSS ----------
 st.markdown("""
@@ -191,6 +192,7 @@ Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer i
     except Exception as e: return f"⚠️ AI error: {str(e)}"
 
 def get_weather_forecast(city):
+    # Simulated forecast (replace with real API if key available)
     return {
         "today": {"temp": 32, "humidity": 65, "condition": "Sunny", "advice": "Good for sowing."},
         "tomorrow": {"temp": 28, "humidity": 85, "condition": "Heavy rain expected", "advice": "Avoid spraying pesticides."}
@@ -273,49 +275,43 @@ def get_kvk_by_district(district):
             return center
     return None
 
-# FIXED GPS HTML: only submits if location is successfully obtained, otherwise shows error and does not trigger weather
+# GPS HTML – only submits when location is successfully obtained
 GPS_HTML = """
-<div id="gps-container">
-    <button id="get-location" style="background:#4CAF50; color:white; padding:8px 16px; border:none; border-radius:30px; cursor:pointer;">📍 Use My Current Location</button>
-    <p id="gps-status" style="margin-top:8px; font-size:0.8rem; color:#555;"></p>
+<div>
+    <button id="get-location" style="background:#4CAF50; color:white; padding:8px 16px; border:none; border-radius:30px; cursor:pointer;">📍 Use My Location</button>
+    <p id="gps-status" style="margin-top:8px;"></p>
 </div>
 <script>
     const btn = document.getElementById('get-location');
-    const statusDiv = document.getElementById('gps-status');
+    const status = document.getElementById('gps-status');
     btn.onclick = function() {
-        if (!('geolocation' in navigator)) {
-            statusDiv.innerHTML = "❌ GPS not supported on this browser.";
-            return;
+        if ('geolocation' in navigator) {
+            status.innerHTML = "📍 Getting location...";
+            navigator.geolocation.getCurrentPosition(function(position) {
+                status.innerHTML = "✅ Location captured! Click 'Get Weather' below.";
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '';
+                const lat = document.createElement('input');
+                lat.name = 'gps_lat';
+                lat.value = position.coords.latitude;
+                const lon = document.createElement('input');
+                lon.name = 'gps_lon';
+                lon.value = position.coords.longitude;
+                form.appendChild(lat);
+                form.appendChild(lon);
+                document.body.appendChild(form);
+                form.submit();
+            }, function(error) {
+                if (error.code === error.PERMISSION_DENIED) {
+                    status.innerHTML = "❌ Location permission denied. Please enable location in your browser settings.";
+                } else {
+                    status.innerHTML = "❌ Could not get location. Please enter city manually.";
+                }
+            });
+        } else {
+            status.innerHTML = "❌ GPS not supported on this browser.";
         }
-        statusDiv.innerHTML = "📍 Getting location...";
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            statusDiv.innerHTML = "✅ Location captured! Getting weather...";
-            // Create form and submit to Streamlit
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '';
-            const latInput = document.createElement('input');
-            latInput.name = 'latitude';
-            latInput.value = lat;
-            const lonInput = document.createElement('input');
-            lonInput.name = 'longitude';
-            lonInput.value = lon;
-            form.appendChild(latInput);
-            form.appendChild(lonInput);
-            document.body.appendChild(form);
-            form.submit();
-        }, function(error) {
-            let errMsg = "";
-            switch(error.code) {
-                case error.PERMISSION_DENIED: errMsg = "❌ Location permission denied. Please enable location in your browser settings."; break;
-                case error.POSITION_UNAVAILABLE: errMsg = "❌ Location unavailable. Try entering city manually."; break;
-                case error.TIMEOUT: errMsg = "❌ Location request timed out."; break;
-                default: errMsg = "❌ Could not get location.";
-            }
-            statusDiv.innerHTML = errMsg;
-        });
     };
 </script>
 """
@@ -326,10 +322,10 @@ def get_city_from_coords(lat, lon):
         return r.json().get('address', {}).get('city') or r.json().get('address', {}).get('town') or "Your Location"
     except: return "Your Location"
 
-# ---------- MAIN TABS (all 9 tabs with full content) ----------
+# ========== MAIN TABS ==========
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5"), t("tab6"), t("tab7"), t("tab8"), t("tab9")])
 
-# ----- TAB 1: VOICE ASSISTANT (with stop button) -----
+# ----- TAB 1: VOICE ASSISTANT -----
 with tab1:
     st.header("Ask by Voice")
     if st.button("⏹️ Stop Recording", key="stop_voice_btn"):
@@ -383,18 +379,40 @@ with tab2:
             st.metric("Price per quintal", f"₹{p['price']}")
             st.caption(f"Source: {p['source']}")
 
-# ----- TAB 3: WEATHER (with GPS fix) -----
+# ----- TAB 3: WEATHER (GPS fixed) -----
 with tab3:
     st.header("Weather & Alerts")
     st.markdown(GPS_HTML, unsafe_allow_html=True)
     st.caption("— OR —")
     city = st.text_input("Enter district/city name", "Lucknow")
-    if st.button("Get Weather") or ("latitude" in st.query_params and "longitude" in st.query_params):
-        if "latitude" in st.query_params and "longitude" in st.query_params:
-            lat = st.query_params["latitude"]
-            lon = st.query_params["longitude"]
-            city = get_city_from_coords(lat, lon)
-            st.success(f"📍 Location detected: {city}")
+    
+    # Handle GPS location from form submission
+    if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
+        lat = st.query_params["gps_lat"]
+        lon = st.query_params["gps_lon"]
+        city = get_city_from_coords(lat, lon)
+        st.success(f"📍 Location detected: {city}")
+        # Automatically show weather after GPS capture (user still needs to click "Get Weather"? No, we can auto-display)
+        # But to avoid confusion, we will show weather immediately after GPS capture.
+        forecast = get_weather_forecast(city)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Today**")
+            st.write(f"🌡️ {forecast['today']['temp']}°C, {forecast['today']['condition']}")
+            st.write(f"💡 {forecast['today']['advice']}")
+        with col2:
+            st.write("**Tomorrow**")
+            st.write(f"🌡️ {forecast['tomorrow']['temp']}°C, {forecast['tomorrow']['condition']}")
+            st.write(f"💡 {forecast['tomorrow']['advice']}")
+        alert_level, advice_list = get_weather_alert(forecast)
+        if alert_level == "red":
+            st.error("🚨 **Severe Weather Alert!**")
+        elif alert_level == "orange":
+            st.warning("⚠️ **Weather Advisory**")
+        for adv in advice_list:
+            st.write(f"- {adv}")
+    
+    if st.button("Get Weather"):
         forecast = get_weather_forecast(city)
         col1, col2 = st.columns(2)
         with col1:
@@ -536,19 +554,19 @@ with tab9:
             st.warning(f"No KVK data available for district: {district}. Please visit [ICAR KVK Portal](https://kvk.icar.gov.in/).")
     st.info("KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.")
 
-# ----- FOOTER -----
+# ----- FOOTER & FLOATING CHATBOT (greeting spoken only once when popover opens) -----
 st.markdown("---")
 st.caption("🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!")
 
-# ----- FLOATING CHATBOT WITH SPOKEN GREETING ON OPEN -----
 with st.popover("💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### KisanMitra Assistant")
-    greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
-    st.info(greeting)
-    # Speak greeting only once per session when popover is opened
-    if "chatbot_greeting_spoken" not in st.session_state:
+    st.info("Ask me anything about farming or using the app.")
+    
+    # Speak greeting only once per session and only when popover is opened
+    if not st.session_state.greeting_spoken:
+        greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
         st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({json.dumps(greeting)}); u.lang="hi-IN"; window.speechSynthesis.speak(u);</script>', height=0)
-        st.session_state.chatbot_greeting_spoken = True
+        st.session_state.greeting_spoken = True
     
     audio_val = st.audio_input("Speak your question", key="chat_audio_popover")
     if audio_val:
