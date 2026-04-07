@@ -68,7 +68,7 @@ if not st.session_state.entered_app:
         }}
     </style>
     <div class="landing-card">
-        <div class="landing-title">🌾 KisanMitra</div>
+        <div class="landing-title">FRIEND</div>
         <div class="landing-subtitle">Voice‑First Farming Companion with a classic earthy feel</div>
         <img src="data:image/svg+xml;utf8,{quote(landing_svg)}" class="landing-image" alt="KisanMitra Farm Banner">
         <p style="margin-top:1rem;">Tap below to begin your smart farming journey</p>
@@ -100,7 +100,7 @@ if not GEMINI_API_KEY:
 
 # ---------- Sample Data (replace with real API) ----------
 SCHEMES_DATA = {
-    "schemes": []   # Add your actual schemes here
+    # ... (keep your existing schemes data)
 }
 
 KVK_DATA = {
@@ -202,8 +202,9 @@ def get_ai_response(query, lang_pref):
 def chatbot_response(query, lang_pref):
     return f"Chatbot demo: {query}"
 
+# FIXED: detect_language without unicode_category
 def detect_language(text):
-    # Simple heuristic: check for Devanagari Unicode range
+    # Simple Devanagari detection
     if any('\u0900' <= c <= '\u097F' for c in text):
         return "Hindi"
     return "English"
@@ -354,7 +355,7 @@ with tab4:
             advice = get_soil_advice(soil_input)
             st.markdown(f'<div class="bot-msg">📋 {advice}</div>', unsafe_allow_html=True)
 
-# ----- TAB 5: AI ADVICE -----
+# ----- TAB 5: AI ADVICE (original) -----
 with tab5:
     st.header("Personalised Farming Advice")
     query = st.text_area("Ask anything about your crops, pests, fertilisers, etc.")
@@ -364,7 +365,7 @@ with tab5:
                 advice = get_ai_response(query, st.session_state.lang_pref)
             st.markdown(f'<div class="bot-msg">🌿 {advice}</div>', unsafe_allow_html=True)
 
-# ----- TAB 6: CROP ROTATION -----
+# ----- TAB 6: CROP ROTATION (original) -----
 with tab6:
     st.header("Crop Rotation Advisory")
     crop = st.text_input("Which crop did you grow last season?")
@@ -373,7 +374,7 @@ with tab6:
             advice = get_crop_rotation_advice(crop)
             st.info(advice)
 
-# ----- TAB 7: WOMEN SCHEMES -----
+# ----- TAB 7: WOMEN SCHEMES (original) -----
 with tab7:
     st.header("Schemes for Women Farmers")
     district = st.text_input("Enter your district")
@@ -385,7 +386,7 @@ with tab7:
                 st.write(scheme['description'])
                 st.markdown("---")
 
-# ----- TAB 8: SCHEMES -----
+# ----- TAB 8: SCHEMES (original) -----
 with tab8:
     st.header("Government Schemes")
     category_filter = st.selectbox("Filter by category", ["All", "Subsidy", "Loan", "Training", "Equipment"])
@@ -399,7 +400,7 @@ with tab8:
                 st.write(scheme['description'])
                 st.markdown(f"[🔗 Know More]({scheme['link']})")
 
-# ----- TAB 9: KVK SUPPORT -----
+# ----- TAB 9: KVK SUPPORT (original) -----
 with tab9:
     st.header("Krishi Vigyan Kendra (KVK)")
     st.caption("Find your nearest KVK centre and get expert agricultural support.")
@@ -416,7 +417,7 @@ with tab9:
             st.warning(f"No KVK data available for district: {district}. Please visit [ICAR KVK Portal](https://kvk.icar.gov.in/).")
     st.info("KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.")
 
-# ----- FOOTER & FLOATING CHATBOT -----
+# ----- FOOTER & FLOATING CHATBOT (original) -----
 st.markdown("---")
 st.caption("🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!")
 
