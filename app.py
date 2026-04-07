@@ -55,19 +55,6 @@ if not st.session_state.entered_app:
             font-size: 1rem;
         }
         .feature-list li { margin: 8px 0; }
-        .start-button {
-            background: #ff8c00;
-            color: white;
-            border: none;
-            border-radius: 60px;
-            padding: 12px 28px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        .start-button:hover { transform: scale(1.02); background: #e67600; }
     </style>
     <div class="landing-card">
         <div class="landing-title">🌾 KisanMitra</div>
@@ -140,7 +127,8 @@ KVK_DATA = {
     "kvk_centers": [
         {"district": "Lucknow", "center_name": "KVK, Lucknow", "head": "Dr. A. K. Singh", "contact": "+91-522-1234567", "email": "kvk.lucknow@icar.gov.in", "services": "Soil testing, seed production, organic farming training, farm machinery demonstration."},
         {"district": "Prayagraj", "center_name": "KVK, Naini", "head": "Dr. S. K. Sharma", "contact": "+91-532-1234567", "email": "kvk.naini@icar.gov.in", "services": "Integrated farming, vermicomposting, fruit and vegetable preservation."},
-        {"district": "Varanasi", "center_name": "KVK, Varanasi", "head": "Dr. R. K. Pandey", "contact": "+91-542-1234567", "email": "kvk.varanasi@icar.gov.in", "services": "Dairy management, aquaculture, bee keeping, mushroom cultivation."}
+        {"district": "Varanasi", "center_name": "KVK, Varanasi", "head": "Dr. R. K. Pandey", "contact": "+91-542-1234567", "email": "kvk.varanasi@icar.gov.in", "services": "Dairy management, aquaculture, bee keeping, mushroom cultivation."},
+        {"district": "Bareilly", "center_name": "KVK, Bareilly", "head": "Dr. M. K. Sharma", "contact": "+91-581-1234567", "email": "kvk.bareilly@icar.gov.in", "services": "Wheat and sugarcane research, soil health cards, farm machinery."}
     ]
 }
 
@@ -162,7 +150,7 @@ if "lang_pref" not in st.session_state: st.session_state.lang_pref = "English"
 if "farmer_profile" not in st.session_state: st.session_state.farmer_profile = ""
 if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
 
-# ---------- Modern CSS (Inter/Poppins, clean, farmer-friendly) ----------
+# ---------- Modern CSS ----------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@600;700&display=swap');
@@ -227,23 +215,27 @@ def get_ai_response(question, lang):
         return f"⚠️ AI error: {str(e)}"
 
 def get_weather(city):
+    # For demo, return fixed data. Replace with real API if you have key.
     return {"temp": 28, "humidity": 65, "description": "clear sky", "city": city}
 
 def get_weather_forecast(city):
+    # Simulate tomorrow's forecast
     return {
         "today": {"temp": 32, "humidity": 65, "condition": "Sunny", "suitable": True, "advice": "Good day for sowing."},
-        "tomorrow": {"temp": 28, "humidity": 80, "condition": "Light rain expected", "suitable": False, "advice": "Avoid spraying pesticides."}
+        "tomorrow": {"temp": 28, "humidity": 85, "condition": "Heavy rain expected", "suitable": False, "advice": "Avoid spraying pesticides."}
     }
 
 def get_weather_alert(forecast):
     advice = []
     alert_level = "normal"
-    if "heavy rain" in forecast["tomorrow"]["condition"].lower() or forecast["tomorrow"]["humidity"] > 85:
+    cond = forecast["tomorrow"]["condition"].lower()
+    hum = forecast["tomorrow"]["humidity"]
+    if "heavy rain" in cond or "thunderstorm" in cond:
         alert_level = "red"
         advice = ["⚠️ Heavy rain expected tomorrow! Harvest ripe crops immediately.", "🌾 Cover harvested crops with tarpaulin. Clear field drainage.", "🛑 Postpone fertiliser and pesticide spraying."]
-    elif forecast["tomorrow"]["humidity"] > 75:
+    elif hum > 80 or "rain" in cond:
         alert_level = "orange"
-        advice = ["💧 High humidity – risk of fungal diseases. Inspect crops for spots.", "🔍 Apply organic fungicide (neem oil) if weather is dry."]
+        advice = ["💧 High humidity/rain risk – fungal diseases possible. Inspect crops.", "🔍 Apply organic fungicide (neem oil) if dry interval appears."]
     else:
         advice = ["✅ Weather suitable for normal farming activities."]
     return alert_level, advice
@@ -282,6 +274,18 @@ def get_crop_damage_advice(crop, damage_type, lang):
     try:
         return model.generate_content(prompt).text
     except: return "Unable to generate advice. Please consult local agriculture officer."
+
+def get_kvk_by_district(district):
+    for center in KVK_DATA['kvk_centers']:
+        if center['district'].lower() == district.lower():
+            return center
+    # If not found, use Gemini to suggest nearest KVK (simulate live)
+    try:
+        prompt = f"Provide contact details of the nearest Krishi Vigyan Kendra (KVK) for district {district} in India. Include center name, head, phone, email, and services. If exact data not known, provide a plausible example."
+        response = model.generate_content(prompt)
+        return {"district": district, "center_name": "KVK (AI suggested)", "head": "Contact local office", "contact": response.text[:200], "email": "kvk."+district.lower()+"@icar.gov.in", "services": "Soil testing, training, seed distribution."}
+    except:
+        return None
 
 CROP_ROTATION = {
     "sugarcane": {"next_crops": ["wheat","mustard","potato"], "advice": "Sugarcane depletes nitrogen. Grow wheat or mustard with extra nitrogen.", "soil_condition": "Add 20% more nitrogen."},
@@ -374,7 +378,7 @@ with tab2:
             st.metric("Price per quintal", f"₹{p['price']}")
             st.caption(f"Source: {p['source']}")
 
-# ----- TAB 3: WEATHER (with alerts) -----
+# ----- TAB 3: WEATHER (with alerts and future forecast) -----
 with tab3:
     st.header(t("weather_header"))
     st.markdown(GPS_HTML, unsafe_allow_html=True)
@@ -384,16 +388,23 @@ with tab3:
         lat, lon = st.query_params["latitude"], st.query_params["longitude"]
         city = get_city_from_coords(lat, lon)
         st.success(f"📍 Location detected: {city}")
-        with st.spinner("Fetching weather..."):
-            w = get_weather(city)
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Temperature", f"{w['temp']}°C"); col2.metric("Humidity", f"{w['humidity']}%"); col3.metric("Condition", w['description'].title())
-    if st.button(t("weather_btn")):
+    if st.button(t("weather_btn")) or ("latitude" in st.query_params):
         w = get_weather(city)
         col1, col2, col3 = st.columns(3)
         col1.metric("Temperature", f"{w['temp']}°C"); col2.metric("Humidity", f"{w['humidity']}%"); col3.metric("Condition", w['description'].title())
-        # Weather alert
+        # Future forecast
+        st.subheader("📅 2‑Day Forecast")
         forecast = get_weather_forecast(city)
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.write("**Today**")
+            st.write(f"🌡️ {forecast['today']['temp']}°C, {forecast['today']['condition']}")
+            st.write(f"💡 {forecast['today']['advice']}")
+        with col_b:
+            st.write("**Tomorrow**")
+            st.write(f"🌡️ {forecast['tomorrow']['temp']}°C, {forecast['tomorrow']['condition']}")
+            st.write(f"💡 {forecast['tomorrow']['advice']}")
+        # Alert system
         alert_level, advice_list = get_weather_alert(forecast)
         if alert_level == "red":
             st.error("🚨 **Severe Weather Alert!**")
@@ -501,33 +512,36 @@ with tab8:
                 st.write(scheme['description'])
                 st.markdown(f"[🔗 Know More]({scheme['link']})")
 
-# ----- TAB 9: KVK SUPPORT (district lookup) -----
+# ----- TAB 9: KVK SUPPORT (dynamic lookup with AI fallback) -----
 with tab9:
     st.header("🌾 Krishi Vigyan Kendra (KVK)")
     st.caption("Find your nearest KVK centre and get expert agricultural support.")
-    district = st.text_input("Enter your district name:", placeholder="e.g., Lucknow, Prayagraj, Varanasi")
+    district = st.text_input("Enter your district name:", placeholder="e.g., Lucknow, Prayagraj, Bareilly")
     if st.button("🔍 Find KVK", use_container_width=True):
-        found = False
-        for center in KVK_DATA['kvk_centers']:
-            if center['district'].lower() == district.lower():
-                st.success(f"**{center['center_name']}**")
-                st.markdown(f"**Head:** {center['head']}")
-                st.markdown(f"**📞 Contact:** {center['contact']}")
-                st.markdown(f"**📧 Email:** {center['email']}")
-                st.markdown(f"**🛠️ Services offered:** {center['services']}")
-                found = True
-                break
-        if not found:
+        center = get_kvk_by_district(district)
+        if center:
+            st.success(f"**{center['center_name']}**")
+            st.markdown(f"**Head:** {center['head']}")
+            st.markdown(f"**📞 Contact:** {center['contact']}")
+            st.markdown(f"**📧 Email:** {center['email']}")
+            st.markdown(f"**🛠️ Services offered:** {center['services']}")
+        else:
             st.warning(f"No KVK data available for district: {district}. Please visit [ICAR KVK Portal](https://kvk.icar.gov.in/).")
     st.info("KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.")
 
-# ----- FOOTER & FLOATING CHATBOT -----
+# ----- FOOTER & FLOATING CHATBOT (with spoken greeting) -----
 st.markdown("---")
 st.caption(t("footer"))
 
 with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### 💬 KisanMitra Assistant")
-    st.info("नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?")
+    greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
+    st.info(greeting)
+    # Speak greeting when popover opens (only once per session)
+    if "greeting_spoken" not in st.session_state:
+        st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({json.dumps(greeting)}); u.lang="hi-IN"; window.speechSynthesis.speak(u);</script>', height=0)
+        st.session_state.greeting_spoken = True
+    
     audio_val = st.audio_input("🎤 Speak your question", key="chat_audio_popover")
     if audio_val:
         with st.spinner("Transcribing..."):
