@@ -100,7 +100,7 @@ if not GEMINI_API_KEY:
 
 # ---------- Sample Data (replace with real API) ----------
 SCHEMES_DATA = {
-    # ... (keep your existing schemes data)
+    "schemes": []   # Add your actual schemes here
 }
 
 KVK_DATA = {
@@ -203,7 +203,10 @@ def chatbot_response(query, lang_pref):
     return f"Chatbot demo: {query}"
 
 def detect_language(text):
-    return "Hindi" if any(unicode_category(c) == 'Lo' for c in text) else "English"
+    # Simple heuristic: check for Devanagari Unicode range
+    if any('\u0900' <= c <= '\u097F' for c in text):
+        return "Hindi"
+    return "English"
 
 def transcribe_audio(audio_bytes):
     return "Sample transcribed text"
