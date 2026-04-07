@@ -11,77 +11,6 @@ import json
 # ========== PAGE CONFIG (MUST BE FIRST) ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== LANDING PAGE / HOME SCREEN ==========
-if "entered_app" not in st.session_state:
-    st.session_state.entered_app = False
-
-if not st.session_state.entered_app:
-    # Farmer‑friendly landing page
-    st.markdown("""
-    <style>
-        .landing-card {
-            background: linear-gradient(145deg, #2d6a4f, #1b4332);
-            padding: 2rem;
-            border-radius: 30px;
-            text-align: center;
-            color: white;
-            margin: 2rem auto;
-            max-width: 800px;
-            box-shadow: 0 20px 30px rgba(0,0,0,0.2);
-        }
-        .landing-title {
-            font-size: 3rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .landing-subtitle {
-            font-size: 1.3rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
-        }
-        .landing-image {
-            width: 100%;
-            max-width: 300px;
-            border-radius: 20px;
-            margin: 1rem auto;
-            border: 3px solid #ffb703;
-        }
-        .feature-list {
-            text-align: left;
-            display: inline-block;
-            margin: 1rem auto;
-            font-size: 1rem;
-        }
-        .feature-list li {
-            margin: 8px 0;
-        }
-    </style>
-    <div class="landing-card">
-        <div class="landing-title">🌾 KisanMitra</div>
-        <div class="landing-subtitle">Voice-Based Digital Field Companion</div>
-        <img src="https://cdn.pixabay.com/photo/2016/11/14/04/08/farmer-1822530_640.jpg" class="landing-image" alt="Indian farmer">
-        <div class="feature-list">
-            <ul>
-                <li>🎤 Voice queries in Hindi / English</li>
-                <li>🌱 Crop advisory & disease detection</li>
-                <li>💰 Live market prices & weather</li>
-                <li>📄 Soil health analysis (photo/PDF)</li>
-                <li>🔄 Crop rotation suggestions</li>
-            </ul>
-        </div>
-        <br>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        if st.button("🚜 Enter KisanMitra", use_container_width=True):
-            st.session_state.entered_app = True
-            st.rerun()
-    st.stop()  # Stop here – main app loads only after entering
-
-# ========== MAIN APP (ONLY AFTER ENTERING) ==========
-
 # ========== LOAD API KEYS ==========
 GEMINI_API_KEY = None
 
@@ -241,92 +170,42 @@ if "chat_query" not in st.session_state:
     st.session_state.chat_query = ""
 if "popover_query" not in st.session_state:
     st.session_state.popover_query = ""
-# Add flag for stopping voice recording
-if "stop_voice" not in st.session_state:
-    st.session_state.stop_voice = False
 
-# ========== FARMER-FRIENDLY CUSTOM CSS ==========
+# ========== CUSTOM CSS ==========
 st.markdown("""
 <style>
-    /* Farmer-friendly theme */
-    .stApp {
-        background: linear-gradient(135deg, #f8f9e6 0%, #e9f5e9 100%);
-        font-family: 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
-    }
-    /* Cards */
-    .user-msg {
-        background: #e8d5b5;
-        padding: 12px 18px;
-        border-radius: 25px 25px 25px 8px;
-        margin: 12px 0;
-        border-left: 6px solid #bc6c25;
-        color: #2c3e2f;
-        font-weight: 500;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    .bot-msg {
-        background: #d9e8d5;
-        padding: 12px 18px;
-        border-radius: 25px 25px 8px 25px;
-        margin: 12px 0;
-        border-right: 6px solid #2d6a4f;
-        color: #1e3a1e;
-        font-weight: 500;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    /* Buttons */
-    .stButton>button {
-        background-color: #bc6c25;
-        color: white;
-        border-radius: 40px;
-        font-weight: bold;
-        font-size: 16px;
-        padding: 10px 20px;
-        border: none;
-        transition: all 0.2s;
-    }
-    .stButton>button:hover {
-        background-color: #9c5218;
-        transform: scale(1.02);
-    }
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-        background-color: #f5e7d3;
-        border-radius: 50px;
-        padding: 6px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 40px;
-        padding: 8px 24px;
-        background-color: #fdf8ed;
-        font-weight: 600;
-        color: #4a5b2e;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #2d6a4f;
-        color: white;
-    }
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background: #2b4b2b;
-        background-image: linear-gradient(145deg, #2b4b2b, #1e3a1e);
-    }
-    [data-testid="stSidebar"] * {
-        color: #fefae0 !important;
-    }
-    /* Headers */
-    h1, h2, h3, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-        color: #2d6a4f !important;
-    }
-    /* Popover button */
+    .stApp { background: linear-gradient(135deg, #f0f7f0, #e0f0e0); }
+    .user-msg { background: #e3f2fd; padding: 10px 15px; border-radius: 20px; margin: 10px 0; border-left: 4px solid #2196f3; }
+    .bot-msg { background: #e8f5e9; padding: 10px 15px; border-radius: 20px; margin: 10px 0; border-left: 4px solid #2e7d32; }
+    .stButton>button { background-color: #ff8c00; color: white; border-radius: 30px; font-weight: bold; width: 100%; }
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: #fff7e8; border-radius: 40px; padding: 6px; }
+    .stTabs [data-baseweb="tab"] { border-radius: 40px; padding: 8px 20px; background-color: #ffe6cc; font-weight: bold; }
+    .stTabs [aria-selected="true"] { background-color: #ff8c00; color: white; }
+</style>
+""", unsafe_allow_html=True)
+st.markdown("""
+<style>
+    /* Make the popover button (robot icon) large and orange */
     [data-testid="stPopover"] button {
-        background-color: #bc6c25 !important;
+        background-color: #ff8c00 !important;
         color: white !important;
-        font-size: 20px !important;
-        padding: 8px 16px !important;
-        border-radius: 40px !important;
+        font-size: 22px !important;
+        padding: 10px 18px !important;
+        border-radius: 50px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
         font-weight: bold !important;
+    }
+    [data-testid="stPopover"] button:hover {
+        background-color: #e67600 !important;
+    }
+    /* Optional: add a pulsing animation to attract attention */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    [data-testid="stPopover"] button {
+        animation: pulse 2s infinite;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -373,10 +252,13 @@ def transcribe_audio(audio_bytes):
         return None
 
 def detect_language(text):
+    """Detect if text contains Hindi characters"""
+    # Check for Devanagari script (Hindi)
     if any('\u0900' <= c <= '\u097f' for c in text):
         return "Hindi"
     else:
         return "English"
+
 
 def get_ai_response(question, lang):
     detected = detect_language(question)
@@ -399,8 +281,14 @@ def get_weather(city):
 
 def get_weather_forecast(city):
     return {
-        "today": {"temp": 32, "humidity": 65, "condition": "Sunny", "suitable": True, "advice": "Good day for sowing."},
-        "tomorrow": {"temp": 28, "humidity": 80, "condition": "Light rain expected", "suitable": False, "advice": "Avoid spraying pesticides."}
+        "today": {
+            "temp": 32, "humidity": 65, "condition": "Sunny",
+            "suitable": True, "advice": "Good day for sowing."
+        },
+        "tomorrow": {
+            "temp": 28, "humidity": 80, "condition": "Light rain expected",
+            "suitable": False, "advice": "Avoid spraying pesticides."
+        }
     }
 
 def get_farming_advice_for_weather(weather_data):
@@ -416,9 +304,18 @@ def get_farming_advice_for_weather(weather_data):
     return advice if advice else ["✅ Weather suitable for normal farming."]
 
 def get_mandi_price(commodity, state="Uttar Pradesh"):
-    mock_prices = {"wheat": 2250, "rice": 2180, "mustard": 5650, "tomato": 1800, "potato": 1200, "onion": 2500, "corn": 2120, "chana": 5200}
+    mock_prices = {
+        "wheat": 2250, "rice": 2180, "mustard": 5650, "tomato": 1800,
+        "potato": 1200, "onion": 2500, "corn": 2120, "chana": 5200
+    }
     price = mock_prices.get(commodity.lower(), 2000)
-    return {"commodity": commodity, "price": price, "market": "Sample Mandi (Live API ready)", "state": state, "source": "Mock data (awaiting API key)"}
+    return {
+        "commodity": commodity,
+        "price": price,
+        "market": "Sample Mandi (Live API ready)",
+        "state": state,
+        "source": "Mock data (awaiting API key)"
+    }
 
 def analyze_soil_image(image):
     prompt = """You are a soil expert. Analyze this soil image and provide:
@@ -460,6 +357,7 @@ def get_personalized_advice(profile, question):
     except:
         return "AI temporarily unavailable."
 
+# Crop rotation
 CROP_ROTATION = {
     "sugarcane": {"next_crops": ["wheat", "mustard", "potato"], "advice": "Sugarcane depletes nitrogen. Grow wheat or mustard with extra nitrogen.", "soil_condition": "Phosphorus levels adequate. Add 20% more nitrogen."},
     "wheat": {"next_crops": ["rice", "maize", "pulses"], "advice": "Wheat leaves residual phosphorus. Good for legumes.", "soil_condition": "Reduce DAP by 25%."},
@@ -478,12 +376,17 @@ def get_crop_rotation_advice(previous_crop, next_crop):
             return {"suitable": False, "advice": f"{previous_crop} to {next_crop} is not ideal. Recommended: {', '.join(CROP_ROTATION[prev]['next_crops'])}", "soil": "Consider soil testing."}
     return {"suitable": True, "advice": "Crop rotation is good for soil health.", "soil": "Add compost before sowing."}
 
+# Chatbot response (must be defined before use)
 def chatbot_response(user_input, lang="English"):
+    # Auto-detect language from input
     detected = detect_language(user_input)
+    
+    # Force the response language with explicit instructions
     if detected == "Hindi":
         force_lang = """Hindi. You MUST answer in Hindi using Devanagari script (हिंदी). Do not use English words or sentences. Even if the question contains some English words, answer in pure Hindi."""
     else:
         force_lang = "English"
+    
     prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
 Response language: {force_lang}
 User says: "{user_input}"
@@ -500,7 +403,7 @@ CRITICAL: If the user spoke in Hindi, you MUST answer in Hindi. Do not mix langu
             return "⚠️ AI model issue. Please refresh the page."
         else:
             return f"⚠️ Error: {error_str[:100]}"
-
+    # Help response (optional)
 def get_help_response(user_question):
     help_topics = {
         "gps": "To use GPS: Tap 'Use My Current Location' button. Allow location permission.",
@@ -515,6 +418,7 @@ def get_help_response(user_question):
             return answer
     return "I can help with: GPS, voice, soil analysis, crop rotation, weather. What would you like to know?"
 
+# GPS HTML (single definition)
 GPS_HTML = """
 <div id="gps-container" style="margin: 10px 0;">
     <button id="get-location" style="background-color:#4CAF50; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; width:100%;">
@@ -564,59 +468,25 @@ def get_city_from_coords(lat, lon):
         return city if city else "Your Location"
     except:
         return "Your Location"
-
 # ========== MAIN TABS ==========
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([t("tab1"), t("tab2"), t("tab3"), t("tab4"), t("tab5"), "🔄 Crop Rotation"])
 
-# ----- TAB 1: VOICE ASSISTANT (with Stop button) -----
+
+# ----- TAB 1: VOICE ASSISTANT -----
 with tab1:
     st.header(t("voice_header"))
-    
-    # Stop button to cancel recording
-    if st.button("⏹️ Stop Recording", key="stop_voice_btn"):
-        st.session_state.stop_voice = True
-        st.rerun()
-    
-    if st.session_state.stop_voice:
-        st.info("🛑 Recording stopped. Click 'Enable Recording' to ask again.")
-        if st.button("🎤 Enable Recording", key="enable_voice"):
-            st.session_state.stop_voice = False
-            st.rerun()
-    else:
-        audio_val = st.audio_input(t("voice_placeholder"), key="main_audio")
-        if audio_val:
-            with st.spinner(t("voice_transcribing")):
-                text = transcribe_audio(audio_val.getvalue())
-            if text:
-                st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {text}</div>', unsafe_allow_html=True)
-                with st.spinner(t("voice_thinking")):
-                    ans = get_ai_response(text, st.session_state.lang_pref)
-                st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
-                st.session_state.history.append({"q": text, "a": ans})
-                # Auto-speak
-                detected_lang = detect_language(ans)
-                tts_lang = "hi-IN" if detected_lang == "Hindi" else "en-US"
-                safe_answer = json.dumps(ans)
-                speak_js = f"""
-                <script>
-                    var utterance = new SpeechSynthesisUtterance({safe_answer});
-                    utterance.lang = '{tts_lang}';
-                    window.speechSynthesis.speak(utterance);
-                </script>
-                """
-                st.components.v1.html(speak_js, height=0)
-            else:
-                st.error(t("voice_error"))
-    
-    st.divider()
-    st.subheader(t("voice_type_header"))
-    txt_q = st.text_input(t("voice_type_placeholder"))
-    if st.button(t("voice_ask_btn"), key="ask_text"):
-        if txt_q:
-            ans = get_ai_response(txt_q, st.session_state.lang_pref)
-            st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {txt_q}</div>', unsafe_allow_html=True)
+    audio_val = st.audio_input(t("voice_placeholder"))
+    if audio_val:
+        with st.spinner(t("voice_transcribing")):
+            text = transcribe_audio(audio_val.getvalue())
+        if text:
+            st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {text}</div>', unsafe_allow_html=True)
+            with st.spinner(t("voice_thinking")):
+                ans = get_ai_response(text, st.session_state.lang_pref)
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
-            st.session_state.history.append({"q": txt_q, "a": ans})
+            st.session_state.history.append({"q": text, "a": ans})
+            
+            # Auto-speak using detected language from answer
             detected_lang = detect_language(ans)
             tts_lang = "hi-IN" if detected_lang == "Hindi" else "en-US"
             safe_answer = json.dumps(ans)
@@ -628,7 +498,31 @@ with tab1:
             </script>
             """
             st.components.v1.html(speak_js, height=0)
-
+        else:
+            st.error(t("voice_error"))
+    
+    st.divider()
+    st.subheader(t("voice_type_header"))
+    txt_q = st.text_input(t("voice_type_placeholder"))
+    if st.button(t("voice_ask_btn"), key="ask_text"):
+        if txt_q:
+            ans = get_ai_response(txt_q, st.session_state.lang_pref)
+            st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {txt_q}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
+            st.session_state.history.append({"q": txt_q, "a": ans})
+            
+            # Auto-speak using detected language from answer
+            detected_lang = detect_language(ans)
+            tts_lang = "hi-IN" if detected_lang == "Hindi" else "en-US"
+            safe_answer = json.dumps(ans)
+            speak_js = f"""
+            <script>
+                var utterance = new SpeechSynthesisUtterance({safe_answer});
+                utterance.lang = '{tts_lang}';
+                window.speechSynthesis.speak(utterance);
+            </script>
+            """
+            st.components.v1.html(speak_js, height=0)
 # ----- TAB 2: MARKET PRICES -----
 with tab2:
     st.header(t("market_header"))
@@ -648,20 +542,28 @@ with tab2:
 # ----- TAB 3: WEATHER (with GPS) -----
 with tab3:
     st.header(t("weather_header"))
+    
+    # Add GPS button
     st.markdown(GPS_HTML, unsafe_allow_html=True)
     st.caption("— OR —")
+    
     city = st.text_input(t("weather_city"), "Lucknow")
+    
+    # Handle GPS location from form submission
     if "latitude" in st.query_params and "longitude" in st.query_params:
         lat = st.query_params["latitude"]
         lon = st.query_params["longitude"]
         city = get_city_from_coords(lat, lon)
         st.success(f"📍 Location detected: {city}")
+        # Auto-fetch weather
         with st.spinner("Fetching weather..."):
-            w = get_weather(city)
+            w = get_weather(city)  # your existing get_weather function
         col1, col2, col3 = st.columns(3)
         col1.metric("Temperature", f"{w['temp']}°C")
         col2.metric("Humidity", f"{w['humidity']}%")
         col3.metric("Condition", w['description'].title())
+        
+    
     if st.button(t("weather_btn")):
         w = get_weather(city)
         col1, col2, col3 = st.columns(3)
@@ -669,7 +571,6 @@ with tab3:
         col2.metric("Humidity", f"{w['humidity']}%")
         col3.metric("Condition", w['description'].title())
         st.session_state.weather_fetched = True
-
 # ----- TAB 4: SOIL HEALTH -----
 with tab4:
     st.header(t("soil_header"))
@@ -712,27 +613,35 @@ with tab5:
 with tab6:
     st.header("🔄 Crop Rotation Advisor")
     st.caption("Plan your next crop based on previous harvest")
+    
     col1, col2 = st.columns(2)
     with col1:
-        previous_crop = st.selectbox("Previous crop grown", ["Sugarcane", "Wheat", "Rice", "Potato", "Tomato", "Maize"])
+        previous_crop = st.selectbox("Previous crop grown", 
+            ["Sugarcane", "Wheat", "Rice", "Potato", "Tomato", "Maize"])
     with col2:
-        next_crop = st.selectbox("Crop you want to grow next", ["Wheat", "Mustard", "Rice", "Potato", "Tomato", "Maize", "Pulses", "Onion"])
+        next_crop = st.selectbox("Crop you want to grow next",
+            ["Wheat", "Mustard", "Rice", "Potato", "Tomato", "Maize", "Pulses", "Onion"])
+    
     if st.button("Get Rotation Advice"):
         advice = get_crop_rotation_advice(previous_crop, next_crop)
+        
         if advice["suitable"]:
             st.success(f"✅ Good rotation choice!")
         else:
             st.warning(f"⚠️ {advice['advice']}")
+        
         st.info(f"🌱 **Soil advice:** {advice['soil']}")
+        
+        # Also give Gemini-powered detailed advice
         with st.spinner("Getting detailed AI advice..."):
             prompt = f"Farmer grew {previous_crop} and wants to grow {next_crop}. Give soil management and fertilizer advice."
             detailed = model.generate_content(prompt)
             st.markdown(f'<div class="bot-msg">🤖 <strong>AI Suggestion:</strong><br>{detailed.text}</div>', unsafe_allow_html=True)
 
+
 # ----- FOOTER -----
 st.markdown("---")
 st.caption(t("footer"))
-
 # ========== FLOATING CHATBOT POPOVER ==========
 with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### 💬 KisanMitra Assistant")
@@ -748,6 +657,7 @@ with st.popover("🤖 💬 Help", use_container_width=False, help="Ask me about 
             with st.spinner("🤔 Thinking..."):
                 ans = chatbot_response(text)
             st.success(f"🤖 **Answer:** {ans}")
+            # Speak answer using detected language
             detected_ans_lang = detect_language(ans)
             tts_lang = "hi-IN" if detected_ans_lang == "Hindi" else "en-US"
             safe_ans = json.dumps(ans)
