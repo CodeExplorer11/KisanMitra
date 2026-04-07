@@ -117,168 +117,171 @@ vision_model = genai.GenerativeModel(MODEL_NAME)
 SUPPORTED_LANGS = {"en": "English", "hi": "हिंदी"}
 DEFAULT_LANGUAGE = "en"
 
-TEXTS = {
-    "en": {
-        "sidebar_title": "KisanMitra",
-        "sidebar_lang": "Language",
-        "sidebar_profile": "Farmer Profile",
-        "sidebar_profile_placeholder": "Your details (crops, land, location)",
-        "sidebar_history": "Conversation History",
-        "sidebar_clear": "Clear History",
-        "tab1": "🎤 Voice",
-        "tab2": "💰 Market",
-        "tab3": "🌤️ Weather",
-        "tab4": "🧪 Soil",
-        "tab5": "📝 Advice",
-        "tab6": "🔄 Rotation",
-        "tab7": "🚺 Women",
-        "tab8": "📜 Schemes",
-        "tab9": "🌾 KVK",
-        "voice_header": "Ask by Voice",
-        "voice_stop": "Stop Recording",
-        "voice_stopped": "Recording stopped. Click 'Enable Recording' to ask again.",
-        "voice_enable": "Enable Recording",
-        "voice_placeholder": "Tap to record your question",
-        "voice_transcribing": "Transcribing...",
-        "voice_thinking": "Getting advice...",
-        "voice_error": "Could not understand. Please speak clearly.",
-        "voice_type_header": "Or type your question",
-        "voice_type_placeholder": "Type here",
-        "voice_ask_btn": "Ask",
-        "market_header": "Mandi Prices",
-        "market_info": "Live API ready – showing sample prices.",
-        "market_commodity": "Commodity (e.g., Wheat, Rice)",
-        "market_state": "State",
-        "market_btn": "Get Price",
-        "weather_header": "Weather & Alerts",
-        "weather_gps_info": "📍 Use <strong>Use My Location</strong> and allow browser GPS. If permission is denied or phone GPS is OFF, weather will <strong>not</strong> load from location.",
-        "weather_or": "— OR —",
-        "weather_city": "Enter district/city name",
-        "weather_source": "Select weather source",
-        "weather_manual": "Manual City",
-        "weather_gps": "Current Location",
-        "weather_btn": "Get Weather",
-        "weather_today": "Today",
-        "weather_tomorrow": "Tomorrow",
-        "weather_temp": "°C",
-        "soil_header": "Soil Health Analysis",
-        "soil_photo_option": "Option 1: Upload a photo of your soil",
-        "soil_photo_btn": "Analyze Soil from Photo",
-        "soil_pdf_option": "Option 2: Upload soil lab report (PDF)",
-        "soil_pdf_btn": "Analyze PDF Report",
-        "soil_manual_option": "Option 3: Enter test results manually",
-        "soil_manual_btn": "Get Manual Advice",
-        "personalized_header": "Personalized Farming Advice",
-        "crop_damage_header": "🌾 Crop Damage Recovery (Heavy Rain / Waterlogging)",
-        "crop_damage_crop": "Affected crop",
-        "crop_damage_type": "Type of damage",
-        "crop_damage_btn": "Get Recovery Advice",
-        "personalized_warning": "Please fill your Farmer Profile in the sidebar first.",
-        "personalized_question": "What specific advice do you need? (e.g., sowing time, pest control, fertilizer)",
-        "personalized_btn": "Get Personalized Advice",
-        "rotation_header": "Crop Rotation Advisor",
-        "rotation_prev": "Previous crop grown",
-        "rotation_next": "Crop you want to grow next",
-        "rotation_btn": "Get Rotation Advice",
-        "women_header": "Women Farmer Empowerment",
-        "safety_tip": "Safety Tip of the Day",
-        "read_tip": "Read Tip Aloud",
-        "emergency_header": "Emergency & Helpline Numbers",
-        "farming_ideas_header": "Small‑Scale Farming for Women",
-        "govt_schemes_women": "Government Schemes for Women",
-        "schemes_header": "Government Schemes for Farmers",
-        "schemes_filter": "Filter by Category:",
-        "kvk_header": "Krishi Vigyan Kendra (KVK)",
-        "kvk_caption": "Find your nearest KVK centre and get expert agricultural support.",
-        "kvk_district": "Enter your district name:",
-        "kvk_btn": "Find KVK",
-        "kvk_info": "KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.",
-        "footer": "🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!"
-    },
-    "hi": {
-        "sidebar_title": "किसान मित्र",
-        "sidebar_lang": "भाषा",
-        "sidebar_profile": "किसान प्रोफ़ाइल",
-        "sidebar_profile_placeholder": "आपका विवरण (फसलें, ज़मीन, स्थान)",
-        "sidebar_history": "बातचीत इतिहास",
-        "sidebar_clear": "इतिहास साफ़ करें",
-        "tab1": "🎤 आवाज़",
-        "tab2": "💰 मंडी",
-        "tab3": "🌤️ मौसम",
-        "tab4": "🧪 मिट्टी",
-        "tab5": "📝 सलाह",
-        "tab6": "🔄 फसल चक्र",
-        "tab7": "🚺 महिला",
-        "tab8": "📜 योजनाएँ",
-        "tab9": "🌾 केवीके",
-        "voice_header": "आवाज़ से पूछें",
-        "voice_stop": "रिकॉर्डिंग बंद करें",
-        "voice_stopped": "रिकॉर्डिंग बंद की गई। फिर से पूछने के लिए 'रिकॉर्डिंग सक्षम करें' पर क्लिक करें।",
-        "voice_enable": "रिकॉर्डिंग सक्षम करें",
-        "voice_placeholder": "अपना सवाल रिकॉर्ड करें",
-        "voice_transcribing": "लिख रहा हूँ...",
-        "voice_thinking": "जवाब दे रहा हूँ...",
-        "voice_error": "समझ नहीं आया। कृपया साफ़ बोलें।",
-        "voice_type_header": "या लिखकर पूछें",
-        "voice_type_placeholder": "यहाँ लिखें",
-        "voice_ask_btn": "पूछें",
-        "market_header": "मंडी भाव",
-        "market_info": "लाइव API तैयार – नमूना मूल्य दिखा रहे हैं।",
-        "market_commodity": "फसल (जैसे, गेहूं, धान)",
-        "market_state": "राज्य",
-        "market_btn": "भाव देखें",
-        "weather_header": "मौसम और अलर्ट",
-        "weather_gps_info": "📍 <strong>मेरा स्थान उपयोग करें</strong> पर क्लिक करें और ब्राउज़र को अनुमति दें। यदि अनुमति नहीं दी या GPS बंद है, तो मौसम लोड नहीं होगा।",
-        "weather_or": "— अथवा —",
-        "weather_city": "जिला/शहर का नाम लिखें",
-        "weather_source": "मौसम स्रोत चुनें",
-        "weather_manual": "मैन्युअल शहर",
-        "weather_gps": "वर्तमान स्थान",
-        "weather_btn": "मौसम देखें",
-        "weather_today": "आज",
-        "weather_tomorrow": "कल",
-        "weather_temp": "°C",
-        "soil_header": "मिट्टी स्वास्थ्य जांच",
-        "soil_photo_option": "विकल्प 1: मिट्टी की फोटो अपलोड करें",
-        "soil_photo_btn": "फोटो से मिट्टी जांचें",
-        "soil_pdf_option": "विकल्प 2: मिट्टी लैब रिपोर्ट (PDF) अपलोड करें",
-        "soil_pdf_btn": "PDF रिपोर्ट जांचें",
-        "soil_manual_option": "विकल्प 3: मैन्युअल रूप से मान दर्ज करें",
-        "soil_manual_btn": "मैन्युअल सलाह लें",
-        "personalized_header": "व्यक्तिगत खेती सलाह",
-        "crop_damage_header": "🌾 फसल क्षति रिकवरी (भारी बारिश / जलभराव)",
-        "crop_damage_crop": "प्रभावित फसल",
-        "crop_damage_type": "क्षति का प्रकार",
-        "crop_damage_btn": "रिकवरी सलाह लें",
-        "personalized_warning": "कृपया पहले साइडबार में किसान प्रोफ़ाइल भरें।",
-        "personalized_question": "आपको किस सलाह की ज़रूरत है? (जैसे, बुवाई का समय, कीट नियंत्रण, खाद)",
-        "personalized_btn": "व्यक्तिगत सलाह लें",
-        "rotation_header": "फसल चक्र सलाहकार",
-        "rotation_prev": "पिछली उगाई गई फसल",
-        "rotation_next": "अगली फसल जो आप उगाना चाहते हैं",
-        "rotation_btn": "फसल चक्र सलाह लें",
-        "women_header": "महिला किसान सशक्तिकरण",
-        "safety_tip": "दिन की सुरक्षा टिप",
-        "read_tip": "टिप सुनें",
-        "emergency_header": "आपातकालीन एवं हेल्पलाइन नंबर",
-        "farming_ideas_header": "महिलाओं के लिए छोटे पैमाने पर खेती के विचार",
-        "govt_schemes_women": "महिला किसानों के लिए सरकारी योजनाएँ",
-        "schemes_header": "किसानों के लिए सरकारी योजनाएँ",
-        "schemes_filter": "श्रेणी से छाँटें:",
-        "kvk_header": "कृषि विज्ञान केंद्र (केवीके)",
-        "kvk_caption": "अपना निकटतम केवीके केंद्र खोजें और विशेषज्ञ कृषि सहायता प्राप्त करें।",
-        "kvk_district": "अपने जिले का नाम लिखें:",
-        "kvk_btn": "केवीके खोजें",
-        "kvk_info": "केवीके केंद्र निःशुल्क मिट्टी परीक्षण, बीज वितरण, प्रशिक्षण और फसल-विशिष्ट सलाह प्रदान करते हैं। तत्काल सहायता के लिए उनसे संपर्क करें।",
-        "footer": "🌾 किसान मित्र – आवाज़-पहला, वास्तविक-समय, व्यक्तिगत खेती साथी | जय किसान!"
-    }
-}
+# Initialize language
+if "language" not in st.session_state:
+    st.session_state.language = DEFAULT_LANGUAGE
 
 def t(key):
-    lang = st.session_state.get("language", DEFAULT_LANGUAGE)
-    return TEXTS.get(lang, TEXTS[DEFAULT_LANGUAGE]).get(key, key)
+    """Return translated text based on current language."""
+    translations = {
+        "en": {
+            "sidebar_title": "KisanMitra",
+            "sidebar_lang": "Language",
+            "sidebar_profile": "Farmer Profile",
+            "sidebar_profile_placeholder": "Your details (crops, land, location)",
+            "sidebar_history": "Conversation History",
+            "sidebar_clear": "Clear History",
+            "tab1": "🎤 Voice",
+            "tab2": "💰 Market",
+            "tab3": "🌤️ Weather",
+            "tab4": "🧪 Soil",
+            "tab5": "📝 Advice",
+            "tab6": "🔄 Rotation",
+            "tab7": "🚺 Women",
+            "tab8": "📜 Schemes",
+            "tab9": "🌾 KVK",
+            "voice_header": "Ask by Voice",
+            "voice_stop": "Stop Recording",
+            "voice_stopped": "Recording stopped. Click 'Enable Recording' to ask again.",
+            "voice_enable": "Enable Recording",
+            "voice_placeholder": "Tap to record your question",
+            "voice_transcribing": "Transcribing...",
+            "voice_thinking": "Getting advice...",
+            "voice_error": "Could not understand. Please speak clearly.",
+            "voice_type_header": "Or type your question",
+            "voice_type_placeholder": "Type here",
+            "voice_ask_btn": "Ask",
+            "market_header": "Mandi Prices",
+            "market_info": "Live API ready – showing sample prices.",
+            "market_commodity": "Commodity (e.g., Wheat, Rice)",
+            "market_state": "State",
+            "market_btn": "Get Price",
+            "weather_header": "Weather & Alerts",
+            "weather_gps_info": "📍 Use <strong>Use My Location</strong> and allow browser GPS. If permission is denied or phone GPS is OFF, weather will <strong>not</strong> load from location.",
+            "weather_or": "— OR —",
+            "weather_city": "Enter district/city name",
+            "weather_source": "Select weather source",
+            "weather_manual": "Manual City",
+            "weather_gps": "Current Location",
+            "weather_btn": "Get Weather",
+            "weather_today": "Today",
+            "weather_tomorrow": "Tomorrow",
+            "weather_temp": "°C",
+            "soil_header": "Soil Health Analysis",
+            "soil_photo_option": "Option 1: Upload a photo of your soil",
+            "soil_photo_btn": "Analyze Soil from Photo",
+            "soil_pdf_option": "Option 2: Upload soil lab report (PDF)",
+            "soil_pdf_btn": "Analyze PDF Report",
+            "soil_manual_option": "Option 3: Enter test results manually",
+            "soil_manual_btn": "Get Manual Advice",
+            "personalized_header": "Personalized Farming Advice",
+            "crop_damage_header": "🌾 Crop Damage Recovery (Heavy Rain / Waterlogging)",
+            "crop_damage_crop": "Affected crop",
+            "crop_damage_type": "Type of damage",
+            "crop_damage_btn": "Get Recovery Advice",
+            "personalized_warning": "Please fill your Farmer Profile in the sidebar first.",
+            "personalized_question": "What specific advice do you need? (e.g., sowing time, pest control, fertilizer)",
+            "personalized_btn": "Get Personalized Advice",
+            "rotation_header": "Crop Rotation Advisor",
+            "rotation_prev": "Previous crop grown",
+            "rotation_next": "Crop you want to grow next",
+            "rotation_btn": "Get Rotation Advice",
+            "women_header": "Women Farmer Empowerment",
+            "safety_tip": "Safety Tip of the Day",
+            "read_tip": "Read Tip Aloud",
+            "emergency_header": "Emergency & Helpline Numbers",
+            "farming_ideas_header": "Small‑Scale Farming for Women",
+            "govt_schemes_women": "Government Schemes for Women",
+            "schemes_header": "Government Schemes for Farmers",
+            "schemes_filter": "Filter by Category:",
+            "kvk_header": "Krishi Vigyan Kendra (KVK)",
+            "kvk_caption": "Find your nearest KVK centre and get expert agricultural support.",
+            "kvk_district": "Enter your district name:",
+            "kvk_btn": "Find KVK",
+            "kvk_info": "KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.",
+            "footer": "🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!"
+        },
+        "hi": {
+            "sidebar_title": "किसान मित्र",
+            "sidebar_lang": "भाषा",
+            "sidebar_profile": "किसान प्रोफ़ाइल",
+            "sidebar_profile_placeholder": "आपका विवरण (फसलें, ज़मीन, स्थान)",
+            "sidebar_history": "बातचीत इतिहास",
+            "sidebar_clear": "इतिहास साफ़ करें",
+            "tab1": "🎤 आवाज़",
+            "tab2": "💰 मंडी",
+            "tab3": "🌤️ मौसम",
+            "tab4": "🧪 मिट्टी",
+            "tab5": "📝 सलाह",
+            "tab6": "🔄 फसल चक्र",
+            "tab7": "🚺 महिला",
+            "tab8": "📜 योजनाएँ",
+            "tab9": "🌾 केवीके",
+            "voice_header": "आवाज़ से पूछें",
+            "voice_stop": "रिकॉर्डिंग बंद करें",
+            "voice_stopped": "रिकॉर्डिंग बंद की गई। फिर से पूछने के लिए 'रिकॉर्डिंग सक्षम करें' पर क्लिक करें।",
+            "voice_enable": "रिकॉर्डिंग सक्षम करें",
+            "voice_placeholder": "अपना सवाल रिकॉर्ड करें",
+            "voice_transcribing": "लिख रहा हूँ...",
+            "voice_thinking": "जवाब दे रहा हूँ...",
+            "voice_error": "समझ नहीं आया। कृपया साफ़ बोलें।",
+            "voice_type_header": "या लिखकर पूछें",
+            "voice_type_placeholder": "यहाँ लिखें",
+            "voice_ask_btn": "पूछें",
+            "market_header": "मंडी भाव",
+            "market_info": "लाइव API तैयार – नमूना मूल्य दिखा रहे हैं।",
+            "market_commodity": "फसल (जैसे, गेहूं, धान)",
+            "market_state": "राज्य",
+            "market_btn": "भाव देखें",
+            "weather_header": "मौसम और अलर्ट",
+            "weather_gps_info": "📍 <strong>मेरा स्थान उपयोग करें</strong> पर क्लिक करें और ब्राउज़र को अनुमति दें। यदि अनुमति नहीं दी या GPS बंद है, तो मौसम लोड नहीं होगा।",
+            "weather_or": "— अथवा —",
+            "weather_city": "जिला/शहर का नाम लिखें",
+            "weather_source": "मौसम स्रोत चुनें",
+            "weather_manual": "मैन्युअल शहर",
+            "weather_gps": "वर्तमान स्थान",
+            "weather_btn": "मौसम देखें",
+            "weather_today": "आज",
+            "weather_tomorrow": "कल",
+            "weather_temp": "°C",
+            "soil_header": "मिट्टी स्वास्थ्य जांच",
+            "soil_photo_option": "विकल्प 1: मिट्टी की फोटो अपलोड करें",
+            "soil_photo_btn": "फोटो से मिट्टी जांचें",
+            "soil_pdf_option": "विकल्प 2: मिट्टी लैब रिपोर्ट (PDF) अपलोड करें",
+            "soil_pdf_btn": "PDF रिपोर्ट जांचें",
+            "soil_manual_option": "विकल्प 3: मैन्युअल रूप से मान दर्ज करें",
+            "soil_manual_btn": "मैन्युअल सलाह लें",
+            "personalized_header": "व्यक्तिगत खेती सलाह",
+            "crop_damage_header": "🌾 फसल क्षति रिकवरी (भारी बारिश / जलभराव)",
+            "crop_damage_crop": "प्रभावित फसल",
+            "crop_damage_type": "क्षति का प्रकार",
+            "crop_damage_btn": "रिकवरी सलाह लें",
+            "personalized_warning": "कृपया पहले साइडबार में किसान प्रोफ़ाइल भरें।",
+            "personalized_question": "आपको किस सलाह की ज़रूरत है? (जैसे, बुवाई का समय, कीट नियंत्रण, खाद)",
+            "personalized_btn": "व्यक्तिगत सलाह लें",
+            "rotation_header": "फसल चक्र सलाहकार",
+            "rotation_prev": "पिछली उगाई गई फसल",
+            "rotation_next": "अगली फसल जो आप उगाना चाहते हैं",
+            "rotation_btn": "फसल चक्र सलाह लें",
+            "women_header": "महिला किसान सशक्तिकरण",
+            "safety_tip": "दिन की सुरक्षा टिप",
+            "read_tip": "टिप सुनें",
+            "emergency_header": "आपातकालीन एवं हेल्पलाइन नंबर",
+            "farming_ideas_header": "महिलाओं के लिए छोटे पैमाने पर खेती के विचार",
+            "govt_schemes_women": "महिला किसानों के लिए सरकारी योजनाएँ",
+            "schemes_header": "किसानों के लिए सरकारी योजनाएँ",
+            "schemes_filter": "श्रेणी से छाँटें:",
+            "kvk_header": "कृषि विज्ञान केंद्र (केवीके)",
+            "kvk_caption": "अपना निकटतम केवीके केंद्र खोजें और विशेषज्ञ कृषि सहायता प्राप्त करें।",
+            "kvk_district": "अपने जिले का नाम लिखें:",
+            "kvk_btn": "केवीके खोजें",
+            "kvk_info": "केवीके केंद्र निःशुल्क मिट्टी परीक्षण, बीज वितरण, प्रशिक्षण और फसल-विशिष्ट सलाह प्रदान करते हैं। तत्काल सहायता के लिए उनसे संपर्क करें।",
+            "footer": "🌾 किसान मित्र – आवाज़-पहला, वास्तविक-समय, व्यक्तिगत खेती साथी | जय किसान!"
+        }
+    }
+    current_lang = st.session_state.get("language", DEFAULT_LANGUAGE)
+    return translations[current_lang].get(key, key)
 
-if "language" not in st.session_state: st.session_state.language = DEFAULT_LANGUAGE
 if "history" not in st.session_state: st.session_state.history = []
 if "lang_pref" not in st.session_state: st.session_state.lang_pref = "English"
 if "farmer_profile" not in st.session_state: st.session_state.farmer_profile = ""
@@ -307,11 +310,17 @@ st.markdown("""
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=70)
     st.title(t("sidebar_title"))
-    selected_lang = st.selectbox(t("sidebar_lang"), options=["en","hi"], format_func=lambda x: "English" if x=="en" else "हिंदी", index=0)
+    
+    # Language selector with visible feedback
+    selected_lang = st.selectbox(t("sidebar_lang"), options=["en","hi"], format_func=lambda x: "English" if x=="en" else "हिंदी", index=0 if st.session_state.language=="en" else 1)
     if selected_lang != st.session_state.language:
         st.session_state.language = selected_lang
         st.session_state.lang_pref = "English" if selected_lang=="en" else "Hindi"
         st.rerun()
+    
+    # Show current language for debugging
+    st.caption(f"Current UI language: {'English' if st.session_state.language=='en' else 'हिंदी'}")
+    
     st.markdown("---")
     st.subheader(t("sidebar_profile"))
     st.session_state.farmer_profile = st.text_area("", value=st.session_state.farmer_profile, placeholder=t("sidebar_profile_placeholder"), height=100)
@@ -340,7 +349,6 @@ def detect_language(text):
 def speak_text(text, lang):
     """Speak text using browser TTS with appropriate language."""
     if lang == "Hindi":
-        # Use hi-IN and try to get a Hindi voice
         js = f"""
         <script>
             var utterance = new SpeechSynthesisUtterance({json.dumps(text)});
@@ -366,7 +374,6 @@ Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer i
     except Exception as e: return f"⚠️ AI error: {str(e)}"
 
 def get_weather_forecast(city):
-    # Simulated forecast (replace with real API if you have key)
     return {
         "today": {"temp": 32, "humidity": 65, "condition": "Sunny", "advice": "Good for sowing."},
         "tomorrow": {"temp": 28, "humidity": 85, "condition": "Heavy rain expected", "advice": "Avoid spraying pesticides."}
@@ -503,7 +510,7 @@ def get_city_from_coords(lat, lon):
         return r.json().get('address', {}).get('city') or r.json().get('address', {}).get('town') or "Your Location"
     except: return "Your Location"
 
-# ---------- SCHEMES DATA (for tabs) ----------
+# ---------- SCHEMES DATA ----------
 SCHEMES_DATA = {
     "schemes": [
         {"category": "Crop Insurance", "name": "Pradhan Mantri Fasal Bima Yojana", "description": "Low premium crop insurance (2% for Kharif, 1.5% for Rabi).", "link": "https://pmfby.gov.in/"},
@@ -681,11 +688,11 @@ with tab6:
 with tab7:
     st.header(t("women_header"))
     safety_tips = [
-        t("safety_tip") + ": 🌾 Always inform a family member before going to the field alone.",
-        t("safety_tip") + ": 📞 Save local police and women’s helpline numbers on speed dial.",
-        t("safety_tip") + ": 👭 Form a group of women farmers in your village for mutual support.",
-        t("safety_tip") + ": 🌿 Keep a basic first‑aid kit in your farming bag.",
-        t("safety_tip") + ": 🚜 Learn about government schemes for women farmers – ask KisanMitra!"
+        "🌾 Always inform a family member before going to the field alone.",
+        "📞 Save local police and women’s helpline numbers on speed dial.",
+        "👭 Form a group of women farmers in your village for mutual support.",
+        "🌿 Keep a basic first‑aid kit in your farming bag.",
+        "🚜 Learn about government schemes for women farmers – ask KisanMitra!"
     ]
     tip_idx = datetime.datetime.now().day % len(safety_tips)
     st.info(f"💡 **{t('safety_tip')}:** {safety_tips[tip_idx]}")
