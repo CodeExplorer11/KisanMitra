@@ -387,38 +387,40 @@ def get_kvk_by_district(district):
 # GPS HTML that sets session state variables via a hidden form and rerun
 GPS_HTML = """
 <div style="margin: 10px 0;">
-    <button id="gps-btn" style="background:#7a5c2e; color:white; padding:8px 16px; border:none; border-radius:30px; cursor:pointer;">📍 Use My Location</button>
-    <p id="gps-status" style="margin-top:8px; font-size:0.85rem;"></p>
+    <button id="gps-btn" style="background:#7a5c2e; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-size:16px;">📍 Use My Location</button>
+    <p id="gps-status" style="margin-top:8px; font-size:0.85rem; color:#5c4b2f;"></p>
 </div>
 <script>
     const btn = document.getElementById('gps-btn');
     const status = document.getElementById('gps-status');
     btn.onclick = function() {
         if (!navigator.geolocation) {
-            status.innerText = "GPS not supported.";
+            status.innerText = "❌ GPS not supported by your browser.";
             return;
         }
-        status.innerText = "Getting location...";
+        status.innerText = "🔍 Requesting location... Please allow permission when the browser asks.";
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
-                status.innerText = "Location captured! Refreshing...";
-                // Set session state via Streamlit's `st.query_params` (which triggers rerun)
+                status.innerText = "✅ Location captured! Refreshing...";
                 const url = new URL(window.location.href);
                 url.searchParams.set('gps_lat', lat);
                 url.searchParams.set('gps_lon', lon);
                 window.location.href = url.toString();
             },
             (err) => {
-                status.innerText = "Location permission denied. Please enable GPS.";
+                let msg = "❌ Location permission denied. ";
+                if (err.code === 1) msg += "Please allow location access in browser settings.";
+                else if (err.code === 2) msg += "Location unavailable. Try again.";
+                else msg += "Unknown error. Please refresh and try again.";
+                status.innerText = msg;
                 console.error(err);
             }
         );
     };
 </script>
 """
-
 def get_city_from_coords(lat, lon):
     try:
         r = requests.get(f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json", headers={'User-Agent':'KisanMitra'})
