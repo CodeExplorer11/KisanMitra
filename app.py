@@ -80,6 +80,7 @@ if not st.session_state.entered_app:
             st.session_state.entered_app = True
             st.rerun()
     st.stop()
+
 # ========== PRODUCT HEADER ==========
 st.markdown("""
 <div style='background:#fffaf0;padding:1rem 1.5rem;border-radius:20px;
@@ -127,176 +128,92 @@ vision_model = genai.GenerativeModel(MODEL_NAME)
 SUPPORTED_LANGS = {"en": "English", "hi": "हिंदी"}
 DEFAULT_LANGUAGE = "en"
 
-# Initialize language
 if "language" not in st.session_state:
     st.session_state.language = DEFAULT_LANGUAGE
 
 def t(key):
-    """Return translated text based on current language."""
     translations = {
         "en": {
-            "sidebar_title": "KisanMitra",
-            "sidebar_lang": "Language",
-            "sidebar_profile": "Farmer Profile",
-            "sidebar_profile_placeholder": "Your details (crops, land, location)",
-            "sidebar_history": "Conversation History",
-            "sidebar_clear": "Clear History",
-            "tab1": "🎤 Voice",
-            "tab2": "💰 Market",
-            "tab3": "🌤️ Weather",
-            "tab4": "🧪 Soil",
-            "tab5": "📝 Advice",
-            "tab6": "🔄 Rotation",
-            "tab7": "🚺 Women",
-            "tab8": "📜 Schemes",
-            "tab9": "🌾 KVK",
-            "voice_header": "Ask by Voice",
-            "voice_stop": "Stop Recording",
-            "voice_stopped": "Recording stopped. Click 'Enable Recording' to ask again.",
-            "voice_enable": "Enable Recording",
-            "voice_placeholder": "Tap to record your question",
-            "voice_transcribing": "Transcribing...",
-            "voice_thinking": "Getting advice...",
-            "voice_error": "Could not understand. Please speak clearly.",
-            "voice_type_header": "Or type your question",
-            "voice_type_placeholder": "Type here",
-            "voice_ask_btn": "Ask",
-            "market_header": "Mandi Prices",
-            "market_info": "Live API ready – showing sample prices.",
-            "market_commodity": "Commodity (e.g., Wheat, Rice)",
-            "market_state": "State",
-            "market_btn": "Get Price",
-            "weather_header": "Weather & Alerts",
-            "weather_gps_info": "📍 Use <strong>Use My Location</strong> and allow browser GPS. If permission is denied or phone GPS is OFF, weather will <strong>not</strong> load from location.",
-            "weather_or": "— OR —",
-            "weather_city": "Enter district/city name",
-            "weather_source": "Select weather source",
-            "weather_manual": "Manual City",
-            "weather_gps": "Current Location",
-            "weather_btn": "Get Weather",
-            "weather_today": "Today",
-            "weather_tomorrow": "Tomorrow",
-            "weather_temp": "°C",
-            "soil_header": "Soil Health Analysis",
-            "soil_photo_option": "Option 1: Upload a photo of your soil",
-            "soil_photo_btn": "Analyze Soil from Photo",
-            "soil_pdf_option": "Option 2: Upload soil lab report (PDF)",
-            "soil_pdf_btn": "Analyze PDF Report",
-            "soil_manual_option": "Option 3: Enter test results manually",
-            "soil_manual_btn": "Get Manual Advice",
-            "personalized_header": "Personalized Farming Advice",
-            "crop_damage_header": "🌾 Crop Damage Recovery (Heavy Rain / Waterlogging)",
-            "crop_damage_crop": "Affected crop",
-            "crop_damage_type": "Type of damage",
-            "crop_damage_btn": "Get Recovery Advice",
+            "sidebar_title": "KisanMitra", "sidebar_lang": "Language", "sidebar_profile": "Farmer Profile",
+            "sidebar_profile_placeholder": "Your details (crops, land, location)", "sidebar_history": "Conversation History",
+            "sidebar_clear": "Clear History", "tab1": "🎤 Voice", "tab2": "💰 Market", "tab3": "🌤️ Weather",
+            "tab4": "🧪 Soil", "tab5": "📝 Advice", "tab6": "🔄 Rotation", "tab7": "🚺 Women", "tab8": "📜 Schemes",
+            "tab9": "🌾 KVK", "voice_header": "Ask by Voice", "voice_stop": "Stop Recording",
+            "voice_stopped": "Recording stopped. Click 'Enable Recording' to ask again.", "voice_enable": "Enable Recording",
+            "voice_placeholder": "Tap to record your question", "voice_transcribing": "Transcribing...",
+            "voice_thinking": "Getting advice...", "voice_error": "Could not understand. Please speak clearly.",
+            "voice_type_header": "Or type your question", "voice_type_placeholder": "Type here", "voice_ask_btn": "Ask",
+            "market_header": "Mandi Prices", "market_info": "Live API ready – showing sample prices.",
+            "market_commodity": "Commodity (e.g., Wheat, Rice)", "market_state": "State", "market_btn": "Get Price",
+            "weather_header": "Weather & Alerts", "weather_gps_info": "📍 Use <strong>Use My Location</strong> and allow browser GPS.",
+            "weather_or": "— OR —", "weather_city": "Enter district/city name", "weather_source": "Select weather source",
+            "weather_manual": "Manual City", "weather_gps": "Current Location", "weather_btn": "Get Weather",
+            "weather_refresh": "🔄 Refresh Weather", "weather_today": "Today", "weather_tomorrow": "Tomorrow",
+            "weather_temp": "°C", "soil_header": "Soil Health Analysis", "soil_photo_option": "Option 1: Upload a photo of your soil",
+            "soil_photo_btn": "Analyze Soil from Photo", "soil_pdf_option": "Option 2: Upload soil lab report (PDF)",
+            "soil_pdf_btn": "Analyze PDF Report", "soil_manual_option": "Option 3: Enter test results manually",
+            "soil_manual_btn": "Get Manual Advice", "personalized_header": "Personalized Farming Advice",
+            "crop_damage_header": "🌾 Crop Damage Recovery (Heavy Rain / Waterlogging)", "crop_damage_crop": "Affected crop",
+            "crop_damage_type": "Type of damage", "crop_damage_btn": "Get Recovery Advice",
             "personalized_warning": "Please fill your Farmer Profile in the sidebar first.",
             "personalized_question": "What specific advice do you need? (e.g., sowing time, pest control, fertilizer)",
-            "personalized_btn": "Get Personalized Advice",
-            "rotation_header": "Crop Rotation Advisor",
-            "rotation_prev": "Previous crop grown",
-            "rotation_next": "Crop you want to grow next",
-            "rotation_btn": "Get Rotation Advice",
-            "women_header": "Women Farmer Empowerment",
-            "safety_tip": "Safety Tip of the Day",
-            "read_tip": "Read Tip Aloud",
-            "emergency_header": "Emergency & Helpline Numbers",
-            "farming_ideas_header": "Small‑Scale Farming for Women",
-            "govt_schemes_women": "Government Schemes for Women",
-            "schemes_header": "Government Schemes for Farmers",
-            "schemes_filter": "Filter by Category:",
-            "kvk_header": "Krishi Vigyan Kendra (KVK)",
+            "personalized_btn": "Get Personalized Advice", "rotation_header": "Crop Rotation Advisor",
+            "rotation_prev": "Previous crop grown", "rotation_next": "Crop you want to grow next", "rotation_btn": "Get Rotation Advice",
+            "women_header": "Women Farmer Empowerment", "safety_tip": "Safety Tip of the Day", "read_tip": "Read Tip Aloud",
+            "emergency_header": "Emergency & Helpline Numbers", "farming_ideas_header": "Small‑Scale Farming for Women",
+            "govt_schemes_women": "Government Schemes for Women", "schemes_header": "Government Schemes for Farmers",
+            "schemes_filter": "Filter by Category:", "kvk_header": "Krishi Vigyan Kendra (KVK)",
             "kvk_caption": "Find your nearest KVK centre and get expert agricultural support.",
-            "kvk_district": "Enter your district name:",
-            "kvk_btn": "Find KVK",
-            "kvk_info": "KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.",
+            "kvk_district": "Enter your district name:", "kvk_btn": "Find KVK",
+            "kvk_info": "KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice.",
             "footer": "🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!"
         },
         "hi": {
-            "sidebar_title": "किसान मित्र",
-            "sidebar_lang": "भाषा",
-            "sidebar_profile": "किसान प्रोफ़ाइल",
-            "sidebar_profile_placeholder": "आपका विवरण (फसलें, ज़मीन, स्थान)",
-            "sidebar_history": "बातचीत इतिहास",
-            "sidebar_clear": "इतिहास साफ़ करें",
-            "tab1": "🎤 आवाज़",
-            "tab2": "💰 मंडी",
-            "tab3": "🌤️ मौसम",
-            "tab4": "🧪 मिट्टी",
-            "tab5": "📝 सलाह",
-            "tab6": "🔄 फसल चक्र",
-            "tab7": "🚺 महिला",
-            "tab8": "📜 योजनाएँ",
-            "tab9": "🌾 केवीके",
-            "voice_header": "आवाज़ से पूछें",
-            "voice_stop": "रिकॉर्डिंग बंद करें",
+            "sidebar_title": "किसान मित्र", "sidebar_lang": "भाषा", "sidebar_profile": "किसान प्रोफ़ाइल",
+            "sidebar_profile_placeholder": "आपका विवरण (फसलें, ज़मीन, स्थान)", "sidebar_history": "बातचीत इतिहास",
+            "sidebar_clear": "इतिहास साफ़ करें", "tab1": "🎤 आवाज़", "tab2": "💰 मंडी", "tab3": "🌤️ मौसम",
+            "tab4": "🧪 मिट्टी", "tab5": "📝 सलाह", "tab6": "🔄 फसल चक्र", "tab7": "🚺 महिला", "tab8": "📜 योजनाएँ",
+            "tab9": "🌾 केवीके", "voice_header": "आवाज़ से पूछें", "voice_stop": "रिकॉर्डिंग बंद करें",
             "voice_stopped": "रिकॉर्डिंग बंद की गई। फिर से पूछने के लिए 'रिकॉर्डिंग सक्षम करें' पर क्लिक करें।",
-            "voice_enable": "रिकॉर्डिंग सक्षम करें",
-            "voice_placeholder": "अपना सवाल रिकॉर्ड करें",
-            "voice_transcribing": "लिख रहा हूँ...",
-            "voice_thinking": "जवाब दे रहा हूँ...",
-            "voice_error": "समझ नहीं आया। कृपया साफ़ बोलें।",
-            "voice_type_header": "या लिखकर पूछें",
-            "voice_type_placeholder": "यहाँ लिखें",
-            "voice_ask_btn": "पूछें",
-            "market_header": "मंडी भाव",
-            "market_info": "लाइव API तैयार – नमूना मूल्य दिखा रहे हैं।",
-            "market_commodity": "फसल (जैसे, गेहूं, धान)",
-            "market_state": "राज्य",
-            "market_btn": "भाव देखें",
-            "weather_header": "मौसम और अलर्ट",
-            "weather_gps_info": "📍 <strong>मेरा स्थान उपयोग करें</strong> पर क्लिक करें और ब्राउज़र को अनुमति दें। यदि अनुमति नहीं दी या GPS बंद है, तो मौसम लोड नहीं होगा।",
-            "weather_or": "— अथवा —",
-            "weather_city": "जिला/शहर का नाम लिखें",
-            "weather_source": "मौसम स्रोत चुनें",
-            "weather_manual": "मैन्युअल शहर",
-            "weather_gps": "वर्तमान स्थान",
-            "weather_btn": "मौसम देखें",
-            "weather_today": "आज",
-            "weather_tomorrow": "कल",
-            "weather_temp": "°C",
-            "soil_header": "मिट्टी स्वास्थ्य जांच",
-            "soil_photo_option": "विकल्प 1: मिट्टी की फोटो अपलोड करें",
-            "soil_photo_btn": "फोटो से मिट्टी जांचें",
-            "soil_pdf_option": "विकल्प 2: मिट्टी लैब रिपोर्ट (PDF) अपलोड करें",
-            "soil_pdf_btn": "PDF रिपोर्ट जांचें",
-            "soil_manual_option": "विकल्प 3: मैन्युअल रूप से मान दर्ज करें",
-            "soil_manual_btn": "मैन्युअल सलाह लें",
-            "personalized_header": "व्यक्तिगत खेती सलाह",
-            "crop_damage_header": "🌾 फसल क्षति रिकवरी (भारी बारिश / जलभराव)",
-            "crop_damage_crop": "प्रभावित फसल",
-            "crop_damage_type": "क्षति का प्रकार",
-            "crop_damage_btn": "रिकवरी सलाह लें",
+            "voice_enable": "रिकॉर्डिंग सक्षम करें", "voice_placeholder": "अपना सवाल रिकॉर्ड करें",
+            "voice_transcribing": "लिख रहा हूँ...", "voice_thinking": "जवाब दे रहा हूँ...",
+            "voice_error": "समझ नहीं आया। कृपया साफ़ बोलें।", "voice_type_header": "या लिखकर पूछें",
+            "voice_type_placeholder": "यहाँ लिखें", "voice_ask_btn": "पूछें", "market_header": "मंडी भाव",
+            "market_info": "लाइव API तैयार – नमूना मूल्य दिखा रहे हैं।", "market_commodity": "फसल (जैसे, गेहूं, धान)",
+            "market_state": "राज्य", "market_btn": "भाव देखें", "weather_header": "मौसम और अलर्ट",
+            "weather_gps_info": "📍 <strong>मेरा स्थान उपयोग करें</strong> पर क्लिक करें और ब्राउज़र को अनुमति दें।",
+            "weather_or": "— अथवा —", "weather_city": "जिला/शहर का नाम लिखें", "weather_source": "मौसम स्रोत चुनें",
+            "weather_manual": "मैन्युअल शहर", "weather_gps": "वर्तमान स्थान", "weather_btn": "मौसम देखें",
+            "weather_refresh": "🔄 मौसम ताज़ा करें", "weather_today": "आज", "weather_tomorrow": "कल", "weather_temp": "°C",
+            "soil_header": "मिट्टी स्वास्थ्य जांच", "soil_photo_option": "विकल्प 1: मिट्टी की फोटो अपलोड करें",
+            "soil_photo_btn": "फोटो से मिट्टी जांचें", "soil_pdf_option": "विकल्प 2: मिट्टी लैब रिपोर्ट (PDF) अपलोड करें",
+            "soil_pdf_btn": "PDF रिपोर्ट जांचें", "soil_manual_option": "विकल्प 3: मैन्युअल रूप से मान दर्ज करें",
+            "soil_manual_btn": "मैन्युअल सलाह लें", "personalized_header": "व्यक्तिगत खेती सलाह",
+            "crop_damage_header": "🌾 फसल क्षति रिकवरी (भारी बारिश / जलभराव)", "crop_damage_crop": "प्रभावित फसल",
+            "crop_damage_type": "क्षति का प्रकार", "crop_damage_btn": "रिकवरी सलाह लें",
             "personalized_warning": "कृपया पहले साइडबार में किसान प्रोफ़ाइल भरें।",
             "personalized_question": "आपको किस सलाह की ज़रूरत है? (जैसे, बुवाई का समय, कीट नियंत्रण, खाद)",
-            "personalized_btn": "व्यक्तिगत सलाह लें",
-            "rotation_header": "फसल चक्र सलाहकार",
-            "rotation_prev": "पिछली उगाई गई फसल",
-            "rotation_next": "अगली फसल जो आप उगाना चाहते हैं",
-            "rotation_btn": "फसल चक्र सलाह लें",
-            "women_header": "महिला किसान सशक्तिकरण",
-            "safety_tip": "दिन की सुरक्षा टिप",
-            "read_tip": "टिप सुनें",
-            "emergency_header": "आपातकालीन एवं हेल्पलाइन नंबर",
+            "personalized_btn": "व्यक्तिगत सलाह लें", "rotation_header": "फसल चक्र सलाहकार",
+            "rotation_prev": "पिछली उगाई गई फसल", "rotation_next": "अगली फसल जो आप उगाना चाहते हैं",
+            "rotation_btn": "फसल चक्र सलाह लें", "women_header": "महिला किसान सशक्तिकरण",
+            "safety_tip": "दिन की सुरक्षा टिप", "read_tip": "टिप सुनें", "emergency_header": "आपातकालीन एवं हेल्पलाइन नंबर",
             "farming_ideas_header": "महिलाओं के लिए छोटे पैमाने पर खेती के विचार",
-            "govt_schemes_women": "महिला किसानों के लिए सरकारी योजनाएँ",
-            "schemes_header": "किसानों के लिए सरकारी योजनाएँ",
-            "schemes_filter": "श्रेणी से छाँटें:",
-            "kvk_header": "कृषि विज्ञान केंद्र (केवीके)",
+            "govt_schemes_women": "महिला किसानों के लिए सरकारी योजनाएँ", "schemes_header": "किसानों के लिए सरकारी योजनाएँ",
+            "schemes_filter": "श्रेणी से छाँटें:", "kvk_header": "कृषि विज्ञान केंद्र (केवीके)",
             "kvk_caption": "अपना निकटतम केवीके केंद्र खोजें और विशेषज्ञ कृषि सहायता प्राप्त करें।",
-            "kvk_district": "अपने जिले का नाम लिखें:",
-            "kvk_btn": "केवीके खोजें",
-            "kvk_info": "केवीके केंद्र निःशुल्क मिट्टी परीक्षण, बीज वितरण, प्रशिक्षण और फसल-विशिष्ट सलाह प्रदान करते हैं। तत्काल सहायता के लिए उनसे संपर्क करें।",
+            "kvk_district": "अपने जिले का नाम लिखें:", "kvk_btn": "केवीके खोजें",
+            "kvk_info": "केवीके केंद्र निःशुल्क मिट्टी परीक्षण, बीज वितरण, प्रशिक्षण और फसल-विशिष्ट सलाह प्रदान करते हैं।",
             "footer": "🌾 किसान मित्र – आवाज़-पहला, वास्तविक-समय, व्यक्तिगत खेती साथी | जय किसान!"
         }
     }
-    current_lang = st.session_state.get("language", DEFAULT_LANGUAGE)
-    return translations[current_lang].get(key, key)
+    return translations[st.session_state.get("language", DEFAULT_LANGUAGE)].get(key, key)
 
 if "history" not in st.session_state: st.session_state.history = []
 if "lang_pref" not in st.session_state: st.session_state.lang_pref = "English"
 if "farmer_profile" not in st.session_state: st.session_state.farmer_profile = ""
 if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
 if "weather_city_from_gps" not in st.session_state: st.session_state.weather_city_from_gps = None
+if "last_weather_data" not in st.session_state: st.session_state.last_weather_data = None
 
 # ---------- Earthy CSS ----------
 st.markdown("""
@@ -320,17 +237,12 @@ st.markdown("""
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=70)
     st.title(t("sidebar_title"))
-    
-    # Language selector with visible feedback
     selected_lang = st.selectbox(t("sidebar_lang"), options=["en","hi"], format_func=lambda x: "English" if x=="en" else "हिंदी", index=0 if st.session_state.language=="en" else 1)
     if selected_lang != st.session_state.language:
         st.session_state.language = selected_lang
         st.session_state.lang_pref = "English" if selected_lang=="en" else "Hindi"
         st.rerun()
-    
-    # Show current language for debugging
     st.caption(f"Current UI language: {'English' if st.session_state.language=='en' else 'हिंदी'}")
-    
     st.markdown("---")
     st.subheader(t("sidebar_profile"))
     st.session_state.farmer_profile = st.text_area("", value=st.session_state.farmer_profile, placeholder=t("sidebar_profile_placeholder"), height=100)
@@ -357,7 +269,6 @@ def detect_language(text):
     return "Hindi" if any('\u0900' <= c <= '\u097f' for c in text) else "English"
 
 def speak_text(text, lang):
-    """Speak text using browser TTS with appropriate language."""
     if lang == "Hindi":
         js = f"""
         <script>
@@ -384,6 +295,7 @@ Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer i
     except Exception as e: return f"⚠️ AI error: {str(e)}"
 
 def get_weather_forecast(city):
+    # Simulated forecast – replace with real API if key available
     return {
         "today": {"temp": 32, "humidity": 65, "condition": "Sunny", "advice": "Good for sowing."},
         "tomorrow": {"temp": 28, "humidity": 85, "condition": "Heavy rain expected", "advice": "Avoid spraying pesticides."}
@@ -472,6 +384,7 @@ def get_kvk_by_district(district):
             return center
     return None
 
+# GPS HTML that sets session state variables via a hidden form and rerun
 GPS_HTML = """
 <div style="margin: 10px 0;">
     <button id="gps-btn" style="background:#7a5c2e; color:white; padding:8px 16px; border:none; border-radius:30px; cursor:pointer;">📍 Use My Location</button>
@@ -490,20 +403,12 @@ GPS_HTML = """
             (pos) => {
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
-                status.innerText = "Location captured! Loading weather...";
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '';
-                const latInp = document.createElement('input');
-                latInp.name = 'gps_lat';
-                latInp.value = lat;
-                const lonInp = document.createElement('input');
-                lonInp.name = 'gps_lon';
-                lonInp.value = lon;
-                form.appendChild(latInp);
-                form.appendChild(lonInp);
-                document.body.appendChild(form);
-                form.submit();
+                status.innerText = "Location captured! Refreshing...";
+                // Set session state via Streamlit's `st.query_params` (which triggers rerun)
+                const url = new URL(window.location.href);
+                url.searchParams.set('gps_lat', lat);
+                url.searchParams.set('gps_lon', lon);
+                window.location.href = url.toString();
             },
             (err) => {
                 status.innerText = "Location permission denied. Please enable GPS.";
@@ -530,21 +435,18 @@ SCHEMES_DATA = {
         {"category": "Soil Health", "name": "Soil Health Card Scheme", "description": "Free soil testing and nutrient recommendations.", "link": "https://soilhealth.dac.gov.in/"}
     ]
 }
+
 # ========== FEATURE HIGHLIGHTS ==========
 col1, col2, col3 = st.columns(3)
-
 with col1:
     st.markdown("### 🌤️ Smart Weather")
     st.caption("Real-time alerts & farming advice")
-
 with col2:
     st.markdown("### 🧪 Soil Intelligence")
     st.caption("Analyze soil via image or reports")
-
 with col3:
     st.markdown("### 🎤 Voice Assistant")
     st.caption("Ask farming questions by voice")
-
 st.divider()
 
 # ---------- TABS ----------
@@ -559,6 +461,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
     "📜 Government Schemes",
     "🌾 KVK Support"
 ])
+
 # ----- TAB 1: VOICE -----
 with tab1:
     st.header(t("voice_header"))
@@ -577,7 +480,6 @@ with tab1:
                 text = transcribe_audio(audio_val.getvalue())
             if text:
                 st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {text}</div>', unsafe_allow_html=True)
-                
                 with st.spinner("🤖 KisanMitra is thinking..."):
                     ans = get_ai_response(text, st.session_state.lang_pref)
                 st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
@@ -592,7 +494,6 @@ with tab1:
         if txt_q:
             with st.spinner("🤖 KisanMitra is thinking..."):
                 ans = get_ai_response(txt_q, st.session_state.lang_pref)
-           
             st.markdown(f'<div class="user-msg">🗣️ <strong>You:</strong> {txt_q}</div>', unsafe_allow_html=True)
             st.markdown(f'<div class="bot-msg">🤖 <strong>KisanMitra:</strong> {ans}</div>', unsafe_allow_html=True)
             st.session_state.history.append({"q": txt_q, "a": ans})
@@ -609,35 +510,37 @@ with tab2:
         if commodity:
             p = get_mandi_price(commodity, state)
             st.markdown(f"""
-            <div style='background:#fffaf0;padding:1rem;border-radius:15px;
-            border:1px solid #dcc9a2'>
+            <div style='background:#fffaf0;padding:1rem;border-radius:15px;border:1px solid #dcc9a2'>
             <h4 style='margin:0;'>🌾 {p['commodity']}</h4>
             <p style='margin:0;'>📍 {p['market']}, {p['state']}</p>
             <h3 style='margin-top:5px;'>₹ {p['price']} / quintal</h3>
             </div>
-             """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             st.caption(f"Source: {p['source']}")
 
-# ----- TAB 3: WEATHER -----
+# ----- TAB 3: WEATHER (with GPS fix and refresh button) -----
 with tab3:
     st.header(t("weather_header"))
     st.markdown(f'<div class="km-earth-card">{t("weather_gps_info")}</div>', unsafe_allow_html=True)
     st.markdown(GPS_HTML, unsafe_allow_html=True)
     st.caption(t("weather_or"))
+    
+    # Process GPS coordinates from URL parameters
+    if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
+        try:
+            lat = float(st.query_params["gps_lat"])
+            lon = float(st.query_params["gps_lon"])
+            city = get_city_from_coords(lat, lon)
+            st.session_state.weather_city_from_gps = city
+            st.success(f"📍 Location detected: {city}")
+            # Clear query params to avoid repeated processing
+            st.query_params.clear()
+            st.rerun()
+        except:
+            pass
+    
     manual_city = st.text_input(t("weather_city"), "Lucknow")
     city = manual_city
-    
-    if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
-        lat = st.query_params.get("gps_lat")
-        lon = st.query_params.get("gps_lon")
-        try:
-            float(lat); float(lon)
-            st.session_state.weather_city_from_gps = get_city_from_coords(lat, lon)
-            st.success(f"📍 Location detected: {st.session_state.weather_city_from_gps}")
-            st.query_params.clear()
-        except (TypeError, ValueError):
-            st.session_state.weather_city_from_gps = None
-
     weather_source = st.radio(t("weather_source"), [t("weather_manual"), t("weather_gps")], horizontal=True)
     if weather_source == t("weather_gps"):
         if st.session_state.weather_city_from_gps:
@@ -646,32 +549,57 @@ with tab3:
         else:
             st.warning("Current location unavailable. Please click 'Use My Location' and allow GPS permission.")
     
-    if st.button(t("weather_btn")):
+    # Button to fetch weather (first time)
+    if st.button(t("weather_btn"), key="get_weather"):
         if weather_source == t("weather_gps") and not st.session_state.weather_city_from_gps:
             st.error("❌ GPS location not available. Turn on location and allow permission, then tap 'Use My Location'.")
         else:
             forecast = get_weather_forecast(city)
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write(f"**{t('weather_today')}**")
-                st.markdown(f"""
-                <div class="km-earth-card">
-                <b>🌡️ {forecast['today']['temp']}°C</b><br>
-                {forecast['today']['condition']}<br>
-💡              {forecast['today']['advice']}
-                </div>
-                """, unsafe_allow_html=True)
-            with col2:
-                st.write(f"**{t('weather_tomorrow')}**")
-                st.write(f"🌡️ {forecast['tomorrow']['temp']}{t('weather_temp')}, {forecast['tomorrow']['condition']}")
-                st.write(f"💡 {forecast['tomorrow']['advice']}")
-            alert_level, advice_list = get_weather_alert(forecast)
-            if alert_level == "red":
-                st.error("🚨 **Severe Weather Alert!**")
-            elif alert_level == "orange":
-                st.warning("⚠️ **Weather Advisory**")
-            for adv in advice_list:
-                st.write(f"- {adv}")
+            st.session_state.last_weather_data = {"city": city, "forecast": forecast}
+            st.rerun()
+    
+    # Button to refresh weather (re‑evaluate alerts)
+    if st.button(t("weather_refresh"), key="refresh_weather"):
+        if weather_source == t("weather_gps") and not st.session_state.weather_city_from_gps:
+            st.error("❌ GPS location not available. Turn on location and allow permission, then tap 'Use My Location'.")
+        else:
+            forecast = get_weather_forecast(city)
+            st.session_state.last_weather_data = {"city": city, "forecast": forecast}
+            st.rerun()
+    
+    # Display weather if available
+    if st.session_state.last_weather_data:
+        data = st.session_state.last_weather_data
+        city_display = data["city"]
+        forecast = data["forecast"]
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"**{t('weather_today')}**")
+            st.markdown(f"""
+            <div class="km-earth-card">
+            <b>🌡️ {forecast['today']['temp']}°C</b><br>
+            {forecast['today']['condition']}<br>
+            💡 {forecast['today']['advice']}
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.write(f"**{t('weather_tomorrow')}**")
+            st.markdown(f"""
+            <div class="km-earth-card">
+            <b>🌡️ {forecast['tomorrow']['temp']}°C</b><br>
+            {forecast['tomorrow']['condition']}<br>
+            💡 {forecast['tomorrow']['advice']}
+            </div>
+            """, unsafe_allow_html=True)
+        alert_level, advice_list = get_weather_alert(forecast)
+        if alert_level == "red":
+            st.error("🚨 **Severe Weather Alert!**")
+        elif alert_level == "orange":
+            st.warning("⚠️ **Weather Advisory**")
+        for adv in advice_list:
+            st.write(f"- {adv}")
+    else:
+        st.info("Click 'Get Weather' or 'Refresh Weather' to see forecast and alerts.")
 
 # ----- TAB 4: SOIL -----
 with tab4:
@@ -696,14 +624,15 @@ with tab4:
     if st.button(t("soil_manual_btn")):
         if soil_input:
             damage_type = st.selectbox(t("crop_damage_type"), ["Waterlogging", "Hailstorm", "Strong wind"])
-        advice = get_soil_advice(soil_input)
-        st.markdown(f'<div class="bot-msg">📋 {advice}</div>', unsafe_allow_html=True)
+            advice = get_soil_advice(soil_input)
+            st.markdown(f'<div class="bot-msg">📋 {advice}</div>', unsafe_allow_html=True)
 
 # ----- TAB 5: PERSONALIZED ADVICE -----
 with tab5:
     st.header(t("personalized_header"))
     st.subheader(t("crop_damage_header"))
     damage_crop = st.selectbox(t("crop_damage_crop"), ["Wheat", "Rice", "Pulses"])
+    damage_type = st.selectbox(t("crop_damage_type"), ["Waterlogging", "Hailstorm", "Strong wind"])
     if st.button(t("crop_damage_btn"), key="recovery_btn"):
         advice = get_crop_damage_advice(damage_crop, damage_type, st.session_state.lang_pref)
         st.markdown(f'<div class="bot-msg">🌿 {advice}</div>', unsafe_allow_html=True)
@@ -838,6 +767,7 @@ with st.popover("💬 Help", use_container_width=False, help="Ask me about farmi
             ans = chatbot_response(text_q, st.session_state.lang_pref)
         st.success(f"🤖 **Answer:** {ans}")
         speak_text(ans, "Hindi" if detect_language(ans) == "Hindi" else "English")
+
 with st.expander("🚀 Future Scope"):
     st.write("""
 - 📱 Mobile app for rural accessibility  
