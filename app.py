@@ -7,6 +7,7 @@ from PIL import Image
 import datetime
 import PyPDF2
 import json
+from urllib.parse import quote
 
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
@@ -16,19 +17,37 @@ if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
 if not st.session_state.entered_app:
-    st.markdown("""
+    landing_svg = """
+    <svg xmlns='http://www.w3.org/2000/svg' width='720' height='380' viewBox='0 0 720 380'>
+      <defs>
+        <linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'>
+          <stop offset='0%' stop-color='#f8ecd0'/>
+          <stop offset='100%' stop-color='#efe2c1'/>
+        </linearGradient>
+      </defs>
+      <rect width='720' height='380' fill='url(#sky)'/>
+      <path d='M0 285 Q140 250 280 285 T560 280 T720 292 L720 380 L0 380 Z' fill='#7c9a48'/>
+      <path d='M0 315 Q150 280 300 320 T620 312 T720 320 L720 380 L0 380 Z' fill='#5f7f35' opacity='0.9'/>
+      <circle cx='610' cy='86' r='32' fill='#f7c95e'/>
+      <text x='42' y='84' font-family='Inter, sans-serif' font-size='44' fill='#3f321f'>🌾 KisanMitra</text>
+      <text x='42' y='130' font-family='Inter, sans-serif' font-size='24' fill='#5d4c2b'>A trusted farming companion for every field.</text>
+      <text x='42' y='180' font-family='Inter, sans-serif' font-size='18' fill='#5d4c2b'>Get weather, mandi rates, and voice support in one place.</text>
+    </svg>
+    """
+    st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         .landing-card {
-            background: #e8f5e9;
+            background: #fff8ea;
             padding: 2rem;
             border-radius: 30px;
             text-align: center;
             margin: 2rem auto;
-            max-width: 700px;
+            max-width: 760px;
             font-family: 'Inter', sans-serif;
-            color: #2e5e2e;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            color: #4a3f2b;
+            border: 1px solid #dfcda8;
+            box-shadow: 0 6px 16px rgba(74,63,43,0.15);
         }
         .landing-title {
             font-size: 2.2rem;
@@ -42,17 +61,17 @@ if not st.session_state.entered_app:
         }
         .landing-image {
             width: 100%;
-            max-width: 260px;
+            max-width: 660px;
             border-radius: 20px;
             margin: 0.5rem auto;
-            border: 2px solid white;
+            border: 2px solid #e2d3b4;
         }
     </style>
     <div class="landing-card">
         <div class="landing-title">🌾 KisanMitra</div>
-        <div class="landing-subtitle">Voice‑First Farming Companion</div>
-        <img src="https://images.pexels.com/photos/158161/field-wheat-yellow-grain-158161.jpeg?auto=compress&cs=tinysrgb&w=600" class="landing-image">
-        <p style="margin-top:1rem;">Tap below to begin</p>
+        <div class="landing-subtitle">Voice‑First Farming Companion with a classic earthy feel</div>
+        <img src="data:image/svg+xml;utf8,{quote(landing_svg)}" class="landing-image" alt="KisanMitra Farm Banner">
+        <p style="margin-top:1rem;">Tap below to begin your smart farming journey</p>
     </div>
     """, unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1,2,1])
@@ -128,22 +147,23 @@ if "history" not in st.session_state: st.session_state.history = []
 if "lang_pref" not in st.session_state: st.session_state.lang_pref = "English"
 if "farmer_profile" not in st.session_state: st.session_state.farmer_profile = ""
 if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
-if "greeting_spoken" not in st.session_state: st.session_state.greeting_spoken = False
+if "weather_city_from_gps" not in st.session_state: st.session_state.weather_city_from_gps = None
 
 # ---------- Light Green CSS ----------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    .stApp { background: #f4faf4 !important; font-family: 'Inter', sans-serif; }
-    h1, h2, h3 { color: #2b5e2b !important; font-weight: 600; }
-    [data-testid="stSidebar"] { background: #d9f0d9 !important; }
-    [data-testid="stSidebar"] * { color: #1e3a1e !important; }
-    .stButton>button { background: #3c9e3c; color: white; border-radius: 30px; font-weight: 500; transition: 0.2s; }
-    .stButton>button:hover { background: #2e7d32; transform: scale(1.02); }
-    .user-msg, .bot-msg { background: white; border-radius: 20px; padding: 0.8rem; margin: 0.8rem 0; border-left: 5px solid #3c9e3c; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .stTabs [data-baseweb="tab-list"] { gap: 5px; background: #e6f0e6; padding: 5px; border-radius: 40px; }
-    .stTabs [data-baseweb="tab"] { border-radius: 30px; padding: 6px 18px; font-weight: 500; color: #2b5e2b; }
-    .stTabs [aria-selected="true"] { background: #3c9e3c; color: white; }
+    .stApp { background: linear-gradient(180deg, #f6f1e5 0%, #efe7d3 100%) !important; font-family: 'Inter', sans-serif; }
+    h1, h2, h3 { color: #4a3f2b !important; font-weight: 600; }
+    [data-testid="stSidebar"] { background: #d9c8a5 !important; }
+    [data-testid="stSidebar"] * { color: #2f2516 !important; }
+    .stButton>button { background: #7a5c2e; color: #fff9ec; border-radius: 30px; font-weight: 500; border: 1px solid #654a24; transition: 0.2s; }
+    .stButton>button:hover { background: #5f4521; transform: scale(1.02); }
+    .user-msg, .bot-msg { background: #fffaf0; border-radius: 20px; padding: 0.8rem; margin: 0.8rem 0; border-left: 5px solid #7a5c2e; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .stTabs [data-baseweb="tab-list"] { gap: 5px; background: #e8dbc0; padding: 5px; border-radius: 40px; }
+    .stTabs [data-baseweb="tab"] { border-radius: 30px; padding: 6px 18px; font-weight: 500; color: #4a3f2b; }
+    .stTabs [aria-selected="true"] { background: #6f8f3d; color: #fffaf0; }
+    .km-earth-card { background: #fffaf0; border: 1px solid #dcc9a2; border-radius: 18px; padding: 0.8rem 1rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -382,54 +402,53 @@ with tab2:
 # ----- TAB 3: WEATHER (GPS fixed) -----
 with tab3:
     st.header("Weather & Alerts")
+    st.markdown('<div class="km-earth-card">📍 Use <strong>Use My Location</strong> and allow browser GPS. If permission is denied or phone GPS is OFF, weather will <strong>not</strong> load from location.</div>', unsafe_allow_html=True)
     st.markdown(GPS_HTML, unsafe_allow_html=True)
     st.caption("— OR —")
-    city = st.text_input("Enter district/city name", "Lucknow")
+    manual_city = st.text_input("Enter district/city name", "Lucknow")
+    city = manual_city
     
     # Handle GPS location from form submission
     if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
-        lat = st.query_params["gps_lat"]
-        lon = st.query_params["gps_lon"]
-        city = get_city_from_coords(lat, lon)
-        st.success(f"📍 Location detected: {city}")
-        # Automatically show weather after GPS capture (user still needs to click "Get Weather"? No, we can auto-display)
-        # But to avoid confusion, we will show weather immediately after GPS capture.
-        forecast = get_weather_forecast(city)
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("**Today**")
-            st.write(f"🌡️ {forecast['today']['temp']}°C, {forecast['today']['condition']}")
-            st.write(f"💡 {forecast['today']['advice']}")
-        with col2:
-            st.write("**Tomorrow**")
-            st.write(f"🌡️ {forecast['tomorrow']['temp']}°C, {forecast['tomorrow']['condition']}")
-            st.write(f"💡 {forecast['tomorrow']['advice']}")
-        alert_level, advice_list = get_weather_alert(forecast)
-        if alert_level == "red":
-            st.error("🚨 **Severe Weather Alert!**")
-        elif alert_level == "orange":
-            st.warning("⚠️ **Weather Advisory**")
-        for adv in advice_list:
-            st.write(f"- {adv}")
+        lat = st.query_params.get("gps_lat")
+        lon = st.query_params.get("gps_lon")
+        try:
+            float(lat); float(lon)
+            st.session_state.weather_city_from_gps = get_city_from_coords(lat, lon)
+            st.success(f"📍 Location detected: {st.session_state.weather_city_from_gps}")
+            st.query_params.clear()
+        except (TypeError, ValueError):
+            st.session_state.weather_city_from_gps = None
+
+    weather_source = st.radio("Select weather source", ["Manual City", "Current Location"], horizontal=True)
+    if weather_source == "Current Location":
+        if st.session_state.weather_city_from_gps:
+            city = st.session_state.weather_city_from_gps
+            st.info(f"Using GPS location: {city}")
+        else:
+            st.warning("Current location unavailable. Please click 'Use My Location' and allow GPS permission.")
     
     if st.button("Get Weather"):
-        forecast = get_weather_forecast(city)
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("**Today**")
-            st.write(f"🌡️ {forecast['today']['temp']}°C, {forecast['today']['condition']}")
-            st.write(f"💡 {forecast['today']['advice']}")
-        with col2:
-            st.write("**Tomorrow**")
-            st.write(f"🌡️ {forecast['tomorrow']['temp']}°C, {forecast['tomorrow']['condition']}")
-            st.write(f"💡 {forecast['tomorrow']['advice']}")
-        alert_level, advice_list = get_weather_alert(forecast)
-        if alert_level == "red":
-            st.error("🚨 **Severe Weather Alert!**")
-        elif alert_level == "orange":
-            st.warning("⚠️ **Weather Advisory**")
-        for adv in advice_list:
-            st.write(f"- {adv}")
+        if weather_source == "Current Location" and not st.session_state.weather_city_from_gps:
+            st.error("❌ GPS location not available. Turn on location and allow permission, then tap 'Use My Location'.")
+        else:
+            forecast = get_weather_forecast(city)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("**Today**")
+                st.write(f"🌡️ {forecast['today']['temp']}°C, {forecast['today']['condition']}")
+                st.write(f"💡 {forecast['today']['advice']}")
+            with col2:
+                st.write("**Tomorrow**")
+                st.write(f"🌡️ {forecast['tomorrow']['temp']}°C, {forecast['tomorrow']['condition']}")
+                st.write(f"💡 {forecast['tomorrow']['advice']}")
+            alert_level, advice_list = get_weather_alert(forecast)
+            if alert_level == "red":
+                st.error("🚨 **Severe Weather Alert!**")
+            elif alert_level == "orange":
+                st.warning("⚠️ **Weather Advisory**")
+            for adv in advice_list:
+                st.write(f"- {adv}")
 
 # ----- TAB 4: SOIL HEALTH -----
 with tab4:
@@ -554,19 +573,16 @@ with tab9:
             st.warning(f"No KVK data available for district: {district}. Please visit [ICAR KVK Portal](https://kvk.icar.gov.in/).")
     st.info("KVK centres provide free soil testing, seed distribution, training, and crop‑specific advice. Contact them for immediate help.")
 
-# ----- FOOTER & FLOATING CHATBOT (greeting spoken only once when popover opens) -----
+# ----- FOOTER & FLOATING CHATBOT -----
 st.markdown("---")
 st.caption("🌾 KisanMitra – Voice-First, Real-Time, Personalized Farming Companion | Jai Kisan!")
 
 with st.popover("💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### KisanMitra Assistant")
     st.info("Ask me anything about farming or using the app.")
-    
-    # Speak greeting only once per session and only when popover is opened
-    if not st.session_state.greeting_spoken:
-        greeting = "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?"
+    if st.button("🔊 Play Welcome", key="play_help_greeting"):
+        greeting = "नमस्ते! मैं आपकी क्या मदद कर सकता हूँ?"
         st.components.v1.html(f'<script>var u=new SpeechSynthesisUtterance({json.dumps(greeting)}); u.lang="hi-IN"; window.speechSynthesis.speak(u);</script>', height=0)
-        st.session_state.greeting_spoken = True
     
     audio_val = st.audio_input("Speak your question", key="chat_audio_popover")
     if audio_val:
