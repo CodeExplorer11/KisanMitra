@@ -10,7 +10,7 @@ import json
 from urllib.parse import quote
 
 # ========== PAGE CONFIG ==========
-st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
+st.set_page_config(page_title="FRIEND", page_icon="🌾", layout="wide")
 
 # ========== LANDING PAGE (image fixed) ==========
 if "entered_app" not in st.session_state:
@@ -68,7 +68,7 @@ if not st.session_state.entered_app:
         }}
     </style>
     <div class="landing-card">
-        <div class="landing-title">FRIEND</div>
+        <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-subtitle">Voice‑First Farming Companion with a classic earthy feel</div>
         <img src="data:image/svg+xml;utf8,{quote(landing_svg)}" class="landing-image" alt="KisanMitra Farm Banner">
         <p style="margin-top:1rem;">Tap below to begin your smart farming journey</p>
