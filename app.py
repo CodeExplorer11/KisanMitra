@@ -86,7 +86,7 @@ if not st.session_state.entered_app:
     </style>
     <div class="landing-container">
         <!-- Replace the image source with your actual image URL -->
-        <img src="https://cdn.pixabay.com/photo/2020/09/18/06/29/farmer-5582259_640.jpg" class="landing-image" alt="Farmer">
+        <img src="https://chatgpt.com/s/m_69d722eadd5c8191bac645e7fbe11cb1">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-tagline">Har Kisan ka Digital Saathi</div>
     </div>
