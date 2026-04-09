@@ -12,25 +12,23 @@ from urllib.parse import quote
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== LANDING PAGE (static, no scroll, uses your image) ==========
+# ========== INITIALIZE SESSION STATE ==========
+if "entered_app" not in st.session_state:
+    st.session_state.entered_app = False
+
+# ========== LANDING PAGE (static, no scroll) ==========
 if not st.session_state.entered_app:
-    # Static full‑screen landing page – no scrolling
+    # Full‑screen landing with no scroll
     st.markdown("""
     <style>
-        /* Remove all padding and margins to make landing page full screen without scroll */
-        html, body, .stApp {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-        }
+        /* Remove padding/margins and force full height */
         .main > div {
             padding: 0rem;
         }
         .stApp {
             background: linear-gradient(145deg, #2d6a4f, #1b4332) !important;
         }
-        .landing-container {
+        .landing-wrapper {
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -44,66 +42,42 @@ if not st.session_state.entered_app:
             overflow: hidden;
         }
         .landing-image {
-            max-width: 300px;
-            width: 80%;
+            max-width: 280px;
+            width: 70%;
             border-radius: 20px;
             margin-bottom: 1.5rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             border: 2px solid #f4a261;
         }
         .landing-title {
-            font-size: 3rem;
+            font-size: 2.8rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
         .landing-tagline {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 500;
             margin-bottom: 2rem;
             opacity: 0.9;
-            font-style: italic;
-        }
-        .start-btn {
-            background-color: #f4a261;
-            color: #1b4332;
-            border: none;
-            border-radius: 60px;
-            padding: 12px 32px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            margin-top: 1rem;
-        }
-        .start-btn:hover {
-            background-color: #e76f51;
-            transform: scale(1.02);
         }
     </style>
-    <div class="landing-container">
-        <!-- Replace this image URL with your own image -->
-        <img src="https://cdn.pixabay.com/photo/2020/09/18/06/29/farmer-5582259_640.jpg" class="landing-image" alt="Indian Farmer">
+    <div class="landing-wrapper">
+        <!-- Replace with your own image URL if needed -->
+        <img src="https://www.google.com/imgres?imgurl=https://seedballs.in/cdn/shop/articles/farmers_day.jpg?v%3D1766078534%26width%3D500&tbnid=RlsNKxP2FS9MqM&vet=1&imgrefurl=https://seedballs.in/blogs/blog/farmers-day-a-powerful-tribute-to-the-heroes-who-feed-the-world?srsltid%3DAfmBOopnwkDKXlplhKwnEADvnfam6_i_f2Sn9o2cIoE2-xl-FURpeHvw&docid=76GBYt0Qf-3NPM&w=500&h=750&hl=en-IN&source=sh/x/im/m1/4&kgs=075546ed03e1bd58&utm_source=sh/x/im/m1/4">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-tagline">Har Kisan ka Digital Saathi</div>
-        <button class="start-btn" onclick="document.getElementById('fake_start').click();">Start Now</button>
     </div>
     """, unsafe_allow_html=True)
-    # Hidden Streamlit button that gets triggered by the HTML button
-    if st.button("Start Now", key="fake_start", use_container_width=True, style="display:none;"):
-        st.session_state.entered_app = True
-        st.rerun()
-    # Also provide a visible Streamlit button as fallback (but it will be hidden by CSS)
-    st.markdown("<style>div[data-testid='column']:has(button[key='fake_start']) button { display: none; }</style>", unsafe_allow_html=True)
-    # Actually, simpler: just use a Streamlit button inside the container? But we need to embed it.
-    # Let's use a simple approach: put the button inside the container using st.markdown with a script that triggers a hidden form submission? That's complicated.
-    # Alternative: use st.columns and place the button as usual but ensure the container height is full and the button appears at the bottom.
-    # I'll revert to the previous method but fix the image and ensure no extra scrolling.
+    # Single Streamlit button centered below
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        if st.button("Start Now", use_container_width=True):
+            st.session_state.entered_app = True
+            st.rerun()
+    st.stop()
+
 # ========== MAIN APP BACKGROUND (earthy gradient) ==========
 st.markdown("""
 <style>
-    /* Reset overflow for main app (allow scrolling) */
     .stApp {
         background: linear-gradient(180deg, #f6f1e5 0%, #efe7d3 100%) !important;
         font-family: 'Inter', sans-serif;
@@ -276,7 +250,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions (unchanged) ----------
+# ---------- Helper Functions ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
