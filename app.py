@@ -12,68 +12,58 @@ from urllib.parse import quote
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== LANDING PAGE ==========
+# ========== LANDING PAGE (simplified, full‑screen) ==========
 if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
 if not st.session_state.entered_app:
-    landing_svg = """
-    <svg xmlns='http://www.w3.org/2000/svg' width='720' height='380' viewBox='0 0 720 380'>
-      <defs>
-        <linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'>
-          <stop offset='0%' stop-color='#f8ecd0'/>
-          <stop offset='100%' stop-color='#efe2c1'/>
-        </linearGradient>
-      </defs>
-      <rect width='720' height='380' fill='url(#sky)'/>
-      <path d='M0 285 Q140 250 280 285 T560 280 T720 292 L720 380 L0 380 Z' fill='#7c9a48'/>
-      <path d='M0 315 Q150 280 300 320 T620 312 T720 320 L720 380 L0 380 Z' fill='#5f7f35' opacity='0.9'/>
-      <circle cx='610' cy='86' r='32' fill='#f7c95e'/>
-      <text x='42' y='84' font-family='Inter, sans-serif' font-size='44' fill='#3f321f'>Bhoomi Bandhu</text>
-      <text x='42' y='130' font-family='Inter, sans-serif' font-size='24' fill='#5d4c2b'>A trusted farming companion for every field.</text>
-      <text x='42' y='180' font-family='Inter, sans-serif' font-size='18' fill='#5d4c2b'>Get weather, mandi rates, and voice support in one place.</text>
-    </svg>
-    """
-    st.markdown(f"""
+    # Full‑screen landing with minimal text
+    st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        .landing-card {{
-            background: #fff8ea;
-            padding: 2rem;
-            border-radius: 30px;
+        /* Remove default padding/margin to make background full */
+        .main > div {
+            padding: 0rem;
+        }
+        .stApp {
+            background: linear-gradient(145deg, #2d6a4f, #1b4332) !important;
+        }
+        .landing-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             text-align: center;
-            margin: 2rem auto;
-            max-width: 760px;
+            color: white;
             font-family: 'Inter', sans-serif;
-            color: #4a3f2b;
-            border: 1px solid #dfcda8;
-            box-shadow: 0 6px 16px rgba(74,63,43,0.15);
-        }}
-        .landing-title {{
-            font-size: 2.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }}
-        .landing-subtitle {{
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            opacity: 0.8;
-        }}
-        .landing-image {{
-            width: 100%;
-            max-width: 660px;
-            border-radius: 20px;
-            margin: 0.5rem auto;
-            border: 2px solid #e2d3b4;
-        }}
+        }
+        .landing-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+        .start-btn {
+            background-color: #f4a261;
+            color: #1b4332;
+            border: none;
+            border-radius: 60px;
+            padding: 12px 32px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .start-btn:hover {
+            background-color: #e76f51;
+            transform: scale(1.02);
+        }
     </style>
     <div class="landing-card">
         <div class="landing-title">🌾 KisanMitra</div>
-        <div class="landing-subtitle">Voice‑First Farming Companion with a classic earthy feel</div>
-        <img src="data:image/svg+xml;utf8,{quote(landing_svg)}" class="landing-image" alt="KisanMitra Farm Banner">
-        <p style="margin-top:1rem;">Tap below to begin your smart farming journey</p>
+        <button class="start-btn" onclick="window.location.reload()">Start Now</button>
     </div>
     """, unsafe_allow_html=True)
+    # Use a Streamlit button to actually trigger state change
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         if st.button("Start Now", use_container_width=True):
@@ -81,18 +71,29 @@ if not st.session_state.entered_app:
             st.rerun()
     st.stop()
 
-# ========== PRODUCT HEADER ==========
+# ========== FULL SCREEN BACKGROUND FOR MAIN APP ==========
 st.markdown("""
-<div style='background:#fffaf0;padding:1rem 1.5rem;border-radius:20px;
+<style>
+    .stApp {
+        background: linear-gradient(180deg, #f6f1e5 0%, #efe7d3 100%) !important;
+        font-family: 'Inter', sans-serif;
+    }
+    /* Remove any extra padding around main content */
+    .main > div {
+        padding: 0rem 1rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ========== PRODUCT HEADER (simple) ==========
+st.markdown("""
+<div style='background:#fffaf0;padding:0.8rem 1.2rem;border-radius:20px;
 border:1px solid #dcc9a2;margin-bottom:1rem'>
-    <h2 style='margin:0;color:#4a3f2b;'>🌾 KisanMitra</h2>
-    <p style='margin:0;color:#6b5a3a;'>
-    AI-powered smart farming assistant for Indian farmers 🇮🇳
-    </p>
+    <h3 style='margin:0;color:#4a3f2b;'>🌾 KisanMitra</h3>
+    <p style='margin:0;color:#6b5a3a;font-size:0.85rem;'>AI-powered smart farming assistant</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ========== MAIN APP ==========
 # ---------- Load API Keys ----------
 GEMINI_API_KEY = None
 try:
@@ -124,7 +125,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
 
-# ---------- Full Multilingual Dictionary ----------
+# ---------- Multilingual Dictionary (only for UI elements, not chatbot) ----------
 SUPPORTED_LANGS = {"en": "English", "hi": "हिंदी"}
 DEFAULT_LANGUAGE = "en"
 
@@ -215,24 +216,6 @@ if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
 if "weather_city_from_gps" not in st.session_state: st.session_state.weather_city_from_gps = None
 if "last_weather_data" not in st.session_state: st.session_state.last_weather_data = None
 
-# ---------- Earthy CSS ----------
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    .stApp { background: linear-gradient(180deg, #f6f1e5 0%, #efe7d3 100%) !important; font-family: 'Inter', sans-serif; }
-    h1, h2, h3 { color: #4a3f2b !important; font-weight: 600; }
-    [data-testid="stSidebar"] { background: #d9c8a5 !important; }
-    [data-testid="stSidebar"] * { color: #2f2516 !important; }
-    .stButton>button { background: #7a5c2e; color: #fff9ec; border-radius: 30px; font-weight: 500; border: 1px solid #654a24; transition: 0.2s; }
-    .stButton>button:hover { background: #5f4521; transform: scale(1.02); }
-    .user-msg, .bot-msg { background: #fffaf0; border-radius: 20px; padding: 0.8rem; margin: 0.8rem 0; border-left: 5px solid #7a5c2e; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    .stTabs [data-baseweb="tab-list"] { gap: 5px; background: #e8dbc0; padding: 5px; border-radius: 40px; }
-    .stTabs [data-baseweb="tab"] { border-radius: 30px; padding: 6px 18px; font-weight: 500; color: #4a3f2b; }
-    .stTabs [aria-selected="true"] { background: #6f8f3d; color: #fffaf0; }
-    .km-earth-card { background: #fffaf0; border: 1px solid #dcc9a2; border-radius: 18px; padding: 0.8rem 1rem; }
-</style>
-""", unsafe_allow_html=True)
-
 # ---------- Sidebar ----------
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=70)
@@ -269,6 +252,7 @@ def detect_language(text):
     return "Hindi" if any('\u0900' <= c <= '\u097f' for c in text) else "English"
 
 def speak_text(text, lang):
+    # Always use Hindi for chatbot greeting (but keep lang param for other uses)
     if lang == "Hindi":
         js = f"""
         <script>
@@ -295,7 +279,6 @@ Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer i
     except Exception as e: return f"⚠️ AI error: {str(e)}"
 
 def get_weather_forecast(city):
-    # Simulated forecast – replace with real API if key available
     return {
         "today": {"temp": 32, "humidity": 65, "condition": "Sunny", "advice": "Good for sowing."},
         "tomorrow": {"temp": 28, "humidity": 85, "condition": "Heavy rain expected", "advice": "Avoid spraying pesticides."}
@@ -362,6 +345,7 @@ def get_crop_rotation_advice(prev, next_c):
     return {"suitable": True, "advice": "Crop rotation is good for soil health.", "soil": "Add compost before sowing."}
 
 def chatbot_response(user_input, lang="English"):
+    # Chatbot always answers in the language of the user (auto-detected)
     detected = detect_language(user_input)
     force_lang = "Hindi. You MUST answer in Hindi using Devanagari script. No English words." if detected == "Hindi" else "English"
     prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
@@ -384,7 +368,6 @@ def get_kvk_by_district(district):
             return center
     return None
 
-# GPS HTML that sets session state variables via a hidden form and rerun
 GPS_HTML = """
 <div style="margin: 10px 0;">
     <button id="gps-btn" style="background:#7a5c2e; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-size:16px;">📍 Use My Location</button>
@@ -425,6 +408,7 @@ GPS_HTML = """
     };
 </script>
 """
+
 def get_city_from_coords(lat, lon):
     try:
         r = requests.get(f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json", headers={'User-Agent':'KisanMitra'})
@@ -524,14 +508,13 @@ with tab2:
             """, unsafe_allow_html=True)
             st.caption(f"Source: {p['source']}")
 
-# ----- TAB 3: WEATHER (with GPS fix and refresh button) -----
+# ----- TAB 3: WEATHER -----
 with tab3:
     st.header(t("weather_header"))
     st.markdown(f'<div class="km-earth-card">{t("weather_gps_info")}</div>', unsafe_allow_html=True)
     st.markdown(GPS_HTML, unsafe_allow_html=True)
     st.caption(t("weather_or"))
     
-    # Process GPS coordinates from form submission (POST)
     if "gps_lat" in st.query_params and "gps_lon" in st.query_params:
         lat = st.query_params.get("gps_lat")
         lon = st.query_params.get("gps_lon")
@@ -540,7 +523,6 @@ with tab3:
             city = get_city_from_coords(lat, lon)
             st.session_state.weather_city_from_gps = city
             st.success(f"📍 Location detected: {city}")
-            # Clear query params to avoid reprocessing
             st.query_params.clear()
             st.rerun()
         except:
@@ -556,7 +538,6 @@ with tab3:
         else:
             st.warning("Current location unavailable. Please click 'Use My Location' and allow GPS permission.")
     
-    # Button to fetch weather (first time)
     if st.button(t("weather_btn"), key="get_weather"):
         if weather_source == t("weather_gps") and not st.session_state.weather_city_from_gps:
             st.error("❌ GPS location not available. Turn on location and allow permission, then tap 'Use My Location'.")
@@ -565,7 +546,6 @@ with tab3:
             st.session_state.last_weather_data = {"city": city, "forecast": forecast}
             st.rerun()
     
-    # Button to refresh weather (re‑evaluate alerts)
     if st.button(t("weather_refresh"), key="refresh_weather"):
         if weather_source == t("weather_gps") and not st.session_state.weather_city_from_gps:
             st.error("❌ GPS location not available. Turn on location and allow permission, then tap 'Use My Location'.")
@@ -574,10 +554,8 @@ with tab3:
             st.session_state.last_weather_data = {"city": city, "forecast": forecast}
             st.rerun()
     
-    # Display weather if available
     if st.session_state.last_weather_data:
         data = st.session_state.last_weather_data
-        city_display = data["city"]
         forecast = data["forecast"]
         col1, col2 = st.columns(2)
         with col1:
@@ -607,6 +585,7 @@ with tab3:
             st.write(f"- {adv}")
     else:
         st.info("Click 'Get Weather' or 'Refresh Weather' to see forecast and alerts.")
+
 # ----- TAB 4: SOIL -----
 with tab4:
     st.header(t("soil_header"))
@@ -629,7 +608,6 @@ with tab4:
     soil_input = st.text_area("")
     if st.button(t("soil_manual_btn")):
         if soil_input:
-            damage_type = st.selectbox(t("crop_damage_type"), ["Waterlogging", "Hailstorm", "Strong wind"])
             advice = get_soil_advice(soil_input)
             st.markdown(f'<div class="bot-msg">📋 {advice}</div>', unsafe_allow_html=True)
 
@@ -743,16 +721,17 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ----- FOOTER & CHATBOT -----
+# ----- FOOTER & CHATBOT (greeting always in Hindi) -----
 st.markdown("---")
 st.caption(t("footer"))
 
 with st.popover("💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### KisanMitra Assistant")
     st.info("Ask me anything about farming or using the app.")
+    # Greeting always in Hindi, not dependent on sidebar language
     if st.button("🔊 Play Welcome", key="play_help_greeting"):
-        greeting = "नमस्ते! मैं आपकी क्या मदद कर सकता हूँ?" if st.session_state.lang_pref == "Hindi" else "Hello! How can I help you?"
-        speak_text(greeting, "Hindi" if st.session_state.lang_pref == "Hindi" else "English")
+        greeting = "नमस्ते! मैं आपकी क्या मदद कर सकता हूँ?"
+        speak_text(greeting, "Hindi")
     
     audio_val = st.audio_input("Speak your question", key="chat_audio_popover")
     if audio_val:
