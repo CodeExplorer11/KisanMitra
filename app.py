@@ -16,18 +16,16 @@ st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
-# ========== LANDING PAGE (full‑screen background, button at bottom) ==========
+# ========== LANDING PAGE (simplified, no hidden buttons) ==========
 if not st.session_state.entered_app:
     st.markdown("""
     <style>
-        /* Remove default padding */
         .main > div {
             padding: 0rem;
         }
         .stApp {
             background: linear-gradient(145deg, #2d6a4f, #1b4332) !important;
         }
-        /* Full‑screen container with background image */
         .landing-wrapper {
             position: fixed;
             top: 0;
@@ -46,7 +44,6 @@ if not st.session_state.entered_app:
             font-family: 'Inter', sans-serif;
             z-index: 999;
         }
-        /* Dark overlay for better text contrast */
         .landing-wrapper::before {
             content: "";
             position: absolute;
@@ -69,15 +66,16 @@ if not st.session_state.entered_app:
             margin-bottom: 3rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
-        /* Button container at bottom */
-        .button-container {
-            position: absolute;
+        /* Style the Streamlit button to appear at bottom */
+        .stButton {
+            position: fixed;
             bottom: 80px;
             left: 0;
             right: 0;
             text-align: center;
+            z-index: 1000;
         }
-        .start-btn {
+        .stButton > button {
             background-color: #f4a261;
             color: #1b4332;
             border: none;
@@ -85,11 +83,12 @@ if not st.session_state.entered_app:
             padding: 12px 32px;
             font-size: 1.2rem;
             font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
+            width: auto;
+            min-width: 200px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: 0.2s;
         }
-        .start-btn:hover {
+        .stButton > button:hover {
             background-color: #e76f51;
             transform: scale(1.02);
         }
@@ -97,17 +96,12 @@ if not st.session_state.entered_app:
     <div class="landing-wrapper">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-tagline">Har Kisan ka Digital Saathi</div>
-        <div class="button-container">
-            <button class="start-btn" onclick="document.getElementById('start_button').click();">Start Now</button>
-        </div>
     </div>
     """, unsafe_allow_html=True)
-    # Hidden Streamlit button triggered by the HTML button
-    if st.button("Start Now", key="start_button", use_container_width=True, style="display:none;"):
+    # Simple Streamlit button (styled via CSS to be at bottom)
+    if st.button("Start Now", use_container_width=False):
         st.session_state.entered_app = True
         st.rerun()
-    # Hide the visible Streamlit button (only the HTML button appears)
-    st.markdown("<style>div[data-testid='column'] button[key='start_button'] { display: none; }</style>", unsafe_allow_html=True)
     st.stop()
 
 # ========== MAIN APP BACKGROUND (earthy gradient) ==========
