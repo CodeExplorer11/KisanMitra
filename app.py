@@ -12,22 +12,22 @@ from urllib.parse import quote
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== LANDING PAGE (simplified, full‑screen) ==========
+# ========== LANDING PAGE (single button, tagline added) ==========
 if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
 if not st.session_state.entered_app:
-    # Full‑screen landing with minimal text
+    # Full‑screen landing with attractive design
     st.markdown("""
     <style>
-        /* Remove default padding/margin to make background full */
+        /* Remove default padding to make background full */
         .main > div {
             padding: 0rem;
         }
         .stApp {
             background: linear-gradient(145deg, #2d6a4f, #1b4332) !important;
         }
-        .landing-card {
+        .landing-container {
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -36,11 +36,25 @@ if not st.session_state.entered_app:
             text-align: center;
             color: white;
             font-family: 'Inter', sans-serif;
+            padding: 2rem;
         }
         .landing-title {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .landing-tagline {
+            font-size: 1.5rem;
+            font-weight: 500;
             margin-bottom: 2rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        .landing-sub {
+            font-size: 1rem;
+            margin-bottom: 3rem;
+            opacity: 0.8;
         }
         .start-btn {
             background-color: #f4a261;
@@ -52,18 +66,36 @@ if not st.session_state.entered_app:
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .start-btn:hover {
             background-color: #e76f51;
             transform: scale(1.02);
         }
+        /* Farmer illustration (simple SVG) */
+        .farmer-icon {
+            margin-bottom: 1.5rem;
+        }
     </style>
-    <div class="landing-card">
+    <div class="landing-container">
+        <div class="farmer-icon">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="35" r="15" fill="#F4A261"/>
+                <rect x="40" y="50" width="20" height="30" fill="#D68C45" rx="3"/>
+                <rect x="30" y="60" width="10" height="20" fill="#6B4226" rx="2"/>
+                <rect x="60" y="60" width="10" height="20" fill="#6B4226" rx="2"/>
+                <path d="M45 80 L55 80 L55 88 L45 88 Z" fill="#2D6A4F"/>
+                <circle cx="35" cy="45" r="3" fill="#2D6A4F"/>
+                <circle cx="65" cy="45" r="3" fill="#2D6A4F"/>
+                <path d="M20 85 L80 85 L80 90 L20 90 Z" fill="#5F7F35"/>
+            </svg>
+        </div>
         <div class="landing-title">🌾 KisanMitra</div>
-        <button class="start-btn" onclick="window.location.reload()">Start Now</button>
+        <div class="landing-tagline">Har Kisan ka Digital Saathi</div>
+        <div class="landing-sub">Voice‑First Farming Companion</div>
     </div>
     """, unsafe_allow_html=True)
-    # Use a Streamlit button to actually trigger state change
+    # Single Streamlit button to enter the app
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         if st.button("Start Now", use_container_width=True):
@@ -71,21 +103,28 @@ if not st.session_state.entered_app:
             st.rerun()
     st.stop()
 
-# ========== FULL SCREEN BACKGROUND FOR MAIN APP ==========
+# ========== MAIN APP BACKGROUND (earthy gradient) ==========
 st.markdown("""
 <style>
     .stApp {
         background: linear-gradient(180deg, #f6f1e5 0%, #efe7d3 100%) !important;
         font-family: 'Inter', sans-serif;
     }
-    /* Remove any extra padding around main content */
+    /* Sidebar earthy green */
+    [data-testid="stSidebar"] {
+        background: #d9c8a5 !important;
+    }
+    [data-testid="stSidebar"] * {
+        color: #2f2516 !important;
+    }
+    /* Remove extra padding */
     .main > div {
         padding: 0rem 1rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ========== PRODUCT HEADER (simple) ==========
+# ========== PRODUCT HEADER ==========
 st.markdown("""
 <div style='background:#fffaf0;padding:0.8rem 1.2rem;border-radius:20px;
 border:1px solid #dcc9a2;margin-bottom:1rem'>
@@ -125,7 +164,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
 
-# ---------- Multilingual Dictionary (only for UI elements, not chatbot) ----------
+# ---------- Multilingual Dictionary (only for UI) ----------
 SUPPORTED_LANGS = {"en": "English", "hi": "हिंदी"}
 DEFAULT_LANGUAGE = "en"
 
@@ -216,7 +255,7 @@ if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
 if "weather_city_from_gps" not in st.session_state: st.session_state.weather_city_from_gps = None
 if "last_weather_data" not in st.session_state: st.session_state.last_weather_data = None
 
-# ---------- Sidebar ----------
+# ---------- Sidebar (earthy green restored) ----------
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=70)
     st.title(t("sidebar_title"))
@@ -239,7 +278,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions ----------
+# ---------- Helper Functions (unchanged, full) ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -252,7 +291,6 @@ def detect_language(text):
     return "Hindi" if any('\u0900' <= c <= '\u097f' for c in text) else "English"
 
 def speak_text(text, lang):
-    # Always use Hindi for chatbot greeting (but keep lang param for other uses)
     if lang == "Hindi":
         js = f"""
         <script>
@@ -345,7 +383,6 @@ def get_crop_rotation_advice(prev, next_c):
     return {"suitable": True, "advice": "Crop rotation is good for soil health.", "soil": "Add compost before sowing."}
 
 def chatbot_response(user_input, lang="English"):
-    # Chatbot always answers in the language of the user (auto-detected)
     detected = detect_language(user_input)
     force_lang = "Hindi. You MUST answer in Hindi using Devanagari script. No English words." if detected == "Hindi" else "English"
     prompt = f"""You are a helpful farming assistant chatbot for KisanMitra.
@@ -728,7 +765,6 @@ st.caption(t("footer"))
 with st.popover("💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### KisanMitra Assistant")
     st.info("Ask me anything about farming or using the app.")
-    # Greeting always in Hindi, not dependent on sidebar language
     if st.button("🔊 Play Welcome", key="play_help_greeting"):
         greeting = "नमस्ते! मैं आपकी क्या मदद कर सकता हूँ?"
         speak_text(greeting, "Hindi")
