@@ -12,15 +12,21 @@ from urllib.parse import quote
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
-# ========== LANDING PAGE (single button, tagline added) ==========
+# ========== LANDING PAGE (static, no scroll, uses your image) ==========
 if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
 if not st.session_state.entered_app:
-    # Full‑screen landing with attractive design
+    # Static full‑screen landing page – no scrolling
     st.markdown("""
     <style>
-        /* Remove default padding to make background full */
+        /* Remove all padding and margins to make landing page full screen without scroll */
+        html, body, .stApp {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
         .main > div {
             padding: 0rem;
         }
@@ -33,13 +39,23 @@ if not st.session_state.entered_app:
             justify-content: center;
             align-items: center;
             height: 100vh;
+            width: 100%;
             text-align: center;
             color: white;
             font-family: 'Inter', sans-serif;
             padding: 2rem;
+            overflow: hidden;
+        }
+        .landing-image {
+            max-width: 300px;
+            width: 80%;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border: 2px solid #f4a261;
         }
         .landing-title {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
@@ -50,11 +66,6 @@ if not st.session_state.entered_app:
             margin-bottom: 2rem;
             opacity: 0.9;
             font-style: italic;
-        }
-        .landing-sub {
-            font-size: 1rem;
-            margin-bottom: 3rem;
-            opacity: 0.8;
         }
         .start-btn {
             background-color: #f4a261;
@@ -72,27 +83,12 @@ if not st.session_state.entered_app:
             background-color: #e76f51;
             transform: scale(1.02);
         }
-        /* Farmer illustration (simple SVG) */
-        .farmer-icon {
-            margin-bottom: 1.5rem;
-        }
     </style>
     <div class="landing-container">
-        <div class="farmer-icon">
-            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="35" r="15" fill="#F4A261"/>
-                <rect x="40" y="50" width="20" height="30" fill="#D68C45" rx="3"/>
-                <rect x="30" y="60" width="10" height="20" fill="#6B4226" rx="2"/>
-                <rect x="60" y="60" width="10" height="20" fill="#6B4226" rx="2"/>
-                <path d="M45 80 L55 80 L55 88 L45 88 Z" fill="#2D6A4F"/>
-                <circle cx="35" cy="45" r="3" fill="#2D6A4F"/>
-                <circle cx="65" cy="45" r="3" fill="#2D6A4F"/>
-                <path d="M20 85 L80 85 L80 90 L20 90 Z" fill="#5F7F35"/>
-            </svg>
-        </div>
+        <!-- Replace the image source with your actual image URL -->
+        <img src="https://cdn.pixabay.com/photo/2020/09/18/06/29/farmer-5582259_640.jpg" class="landing-image" alt="Farmer">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-tagline">Har Kisan ka Digital Saathi</div>
-        <div class="landing-sub">Voice‑First Farming Companion</div>
     </div>
     """, unsafe_allow_html=True)
     # Single Streamlit button to enter the app
@@ -106,9 +102,11 @@ if not st.session_state.entered_app:
 # ========== MAIN APP BACKGROUND (earthy gradient) ==========
 st.markdown("""
 <style>
+    /* Reset overflow for main app (allow scrolling) */
     .stApp {
         background: linear-gradient(180deg, #f6f1e5 0%, #efe7d3 100%) !important;
         font-family: 'Inter', sans-serif;
+        overflow: auto;
     }
     /* Sidebar earthy green */
     [data-testid="stSidebar"] {
@@ -117,7 +115,6 @@ st.markdown("""
     [data-testid="stSidebar"] * {
         color: #2f2516 !important;
     }
-    /* Remove extra padding */
     .main > div {
         padding: 0rem 1rem;
     }
@@ -164,7 +161,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
 
-# ---------- Multilingual Dictionary (only for UI) ----------
+# ---------- Multilingual Dictionary ----------
 SUPPORTED_LANGS = {"en": "English", "hi": "हिंदी"}
 DEFAULT_LANGUAGE = "en"
 
@@ -255,7 +252,7 @@ if "stop_voice" not in st.session_state: st.session_state.stop_voice = False
 if "weather_city_from_gps" not in st.session_state: st.session_state.weather_city_from_gps = None
 if "last_weather_data" not in st.session_state: st.session_state.last_weather_data = None
 
-# ---------- Sidebar (earthy green restored) ----------
+# ---------- Sidebar ----------
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998626.png", width=70)
     st.title(t("sidebar_title"))
@@ -278,7 +275,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions (unchanged, full) ----------
+# ---------- Helper Functions (unchanged) ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -758,7 +755,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ----- FOOTER & CHATBOT (greeting always in Hindi) -----
+# ----- FOOTER & CHATBOT -----
 st.markdown("---")
 st.caption(t("footer"))
 
