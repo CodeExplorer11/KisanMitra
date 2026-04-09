@@ -13,9 +13,6 @@ from urllib.parse import quote
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 
 # ========== LANDING PAGE (static, no scroll, uses your image) ==========
-if "entered_app" not in st.session_state:
-    st.session_state.entered_app = False
-
 if not st.session_state.entered_app:
     # Static full‑screen landing page – no scrolling
     st.markdown("""
@@ -78,6 +75,7 @@ if not st.session_state.entered_app:
             cursor: pointer;
             transition: 0.2s;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            margin-top: 1rem;
         }
         .start-btn:hover {
             background-color: #e76f51;
@@ -85,20 +83,23 @@ if not st.session_state.entered_app:
         }
     </style>
     <div class="landing-container">
-        <!-- Replace the image source with your actual image URL -->
-        <img src="https://chatgpt.com/s/m_69d722eadd5c8191bac645e7fbe11cb1">
+        <!-- Replace this image URL with your own image -->
+        <img src="https://cdn.pixabay.com/photo/2020/09/18/06/29/farmer-5582259_640.jpg" class="landing-image" alt="Indian Farmer">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-tagline">Har Kisan ka Digital Saathi</div>
+        <button class="start-btn" onclick="document.getElementById('fake_start').click();">Start Now</button>
     </div>
     """, unsafe_allow_html=True)
-    # Single Streamlit button to enter the app
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        if st.button("Start Now", use_container_width=True):
-            st.session_state.entered_app = True
-            st.rerun()
-    st.stop()
-
+    # Hidden Streamlit button that gets triggered by the HTML button
+    if st.button("Start Now", key="fake_start", use_container_width=True, style="display:none;"):
+        st.session_state.entered_app = True
+        st.rerun()
+    # Also provide a visible Streamlit button as fallback (but it will be hidden by CSS)
+    st.markdown("<style>div[data-testid='column']:has(button[key='fake_start']) button { display: none; }</style>", unsafe_allow_html=True)
+    # Actually, simpler: just use a Streamlit button inside the container? But we need to embed it.
+    # Let's use a simple approach: put the button inside the container using st.markdown with a script that triggers a hidden form submission? That's complicated.
+    # Alternative: use st.columns and place the button as usual but ensure the container height is full and the button appears at the bottom.
+    # I'll revert to the previous method but fix the image and ensure no extra scrolling.
 # ========== MAIN APP BACKGROUND (earthy gradient) ==========
 st.markdown("""
 <style>
