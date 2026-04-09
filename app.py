@@ -16,63 +16,98 @@ st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
 if "entered_app" not in st.session_state:
     st.session_state.entered_app = False
 
-# ========== LANDING PAGE (static, no scroll) ==========
+# ========== LANDING PAGE (full‑screen background, button at bottom) ==========
 if not st.session_state.entered_app:
-    # Full‑screen landing with no scroll
     st.markdown("""
     <style>
-        /* Remove padding/margins and force full height */
+        /* Remove default padding */
         .main > div {
             padding: 0rem;
         }
         .stApp {
             background: linear-gradient(145deg, #2d6a4f, #1b4332) !important;
         }
+        /* Full‑screen container with background image */
         .landing-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://cdn.pixabay.com/photo/2016/11/14/04/08/farmer-1822530_640.jpg');
+            background-size: cover;
+            background-position: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            width: 100%;
             text-align: center;
             color: white;
             font-family: 'Inter', sans-serif;
-            padding: 2rem;
-            overflow: hidden;
+            z-index: 999;
         }
-        .landing-image {
-            max-width: 280px;
-            width: 70%;
-            border-radius: 20px;
-            margin-bottom: 1.5rem;
-            border: 2px solid #f4a261;
+        /* Dark overlay for better text contrast */
+        .landing-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: -1;
         }
         .landing-title {
-            font-size: 2.8rem;
+            font-size: 3rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         .landing-tagline {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 500;
-            margin-bottom: 2rem;
-            opacity: 0.9;
+            margin-bottom: 3rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        /* Button container at bottom */
+        .button-container {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        .start-btn {
+            background-color: #f4a261;
+            color: #1b4332;
+            border: none;
+            border-radius: 60px;
+            padding: 12px 32px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .start-btn:hover {
+            background-color: #e76f51;
+            transform: scale(1.02);
         }
     </style>
     <div class="landing-wrapper">
-        <!-- Replace with your own image URL if needed -->
-        <img src="https://www.google.com/imgres?imgurl=https://seedballs.in/cdn/shop/articles/farmers_day.jpg?v%3D1766078534%26width%3D500&tbnid=RlsNKxP2FS9MqM&vet=1&imgrefurl=https://seedballs.in/blogs/blog/farmers-day-a-powerful-tribute-to-the-heroes-who-feed-the-world?srsltid%3DAfmBOopnwkDKXlplhKwnEADvnfam6_i_f2Sn9o2cIoE2-xl-FURpeHvw&docid=76GBYt0Qf-3NPM&w=500&h=750&hl=en-IN&source=sh/x/im/m1/4&kgs=075546ed03e1bd58&utm_source=sh/x/im/m1/4">
         <div class="landing-title">🌾 KisanMitra</div>
         <div class="landing-tagline">Har Kisan ka Digital Saathi</div>
+        <div class="button-container">
+            <button class="start-btn" onclick="document.getElementById('start_button').click();">Start Now</button>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-    # Single Streamlit button centered below
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        if st.button("Start Now", use_container_width=True):
-            st.session_state.entered_app = True
-            st.rerun()
+    # Hidden Streamlit button triggered by the HTML button
+    if st.button("Start Now", key="start_button", use_container_width=True, style="display:none;"):
+        st.session_state.entered_app = True
+        st.rerun()
+    # Hide the visible Streamlit button (only the HTML button appears)
+    st.markdown("<style>div[data-testid='column'] button[key='start_button'] { display: none; }</style>", unsafe_allow_html=True)
     st.stop()
 
 # ========== MAIN APP BACKGROUND (earthy gradient) ==========
