@@ -770,19 +770,25 @@ def show_dashboard():
         (t("nabard_title"), "🏦", t("nabard_desc"), "nabard"),
     ]
     
-    # Display in 2 columns, 5 rows
-    for i in range(0, len(features), 2):
-        cols = st.columns(2)
-        for j in range(2):
-            if i + j < len(features):
-                title, icon, desc, key = features[i+j]
-                button_label = f"{icon}\n\n**{title}**\n\n{desc}"
-                if cols[j].button(button_label, use_container_width=True):
-                    st.session_state.selected_feature = key
-                    st.rerun()
+    # Build HTML grid (2 columns, auto rows)
+    grid_html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">'
+    for title, icon, desc, key in features:
+        grid_html += f'''
+        <div style="background:#f1f8e9; border:1px solid #a5d6a7; border-radius:20px; padding:1rem 0.5rem; text-align:center; cursor:pointer;" onclick="document.getElementById('btn_{key}').click();">
+            <div style="font-size:2rem;">{icon}</div>
+            <div style="font-weight:600; margin:0.5rem 0 0.2rem; color:#2e7d32;">{title}</div>
+            <div style="font-size:0.75rem; color:#558b2f;">{desc}</div>
+        </div>
+        '''
+    grid_html += '</div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
+    
+    # Hidden Streamlit buttons to trigger the feature selection
+    for title, icon, desc, key in features:
+        st.button(f"hidden_{key}", key=f"btn_{key}", style="display:none;")
+    
     st.markdown("---")
     st.caption(t("footer"))
-
 # ========== MAIN FLOW ==========
 if st.session_state.selected_feature is None:
     show_dashboard()
