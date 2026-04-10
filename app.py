@@ -18,7 +18,7 @@ if "entered_app" not in st.session_state:
 if "selected_feature" not in st.session_state:
     st.session_state.selected_feature = None
 
-# ========== LANDING PAGE (fixed image URL) ==========
+# ========== LANDING PAGE ==========
 if not st.session_state.entered_app:
     st.markdown("""
     <style>
@@ -55,7 +55,7 @@ if not st.session_state.entered_app:
         st.rerun()
     st.stop()
 
-# ========== MAIN APP BACKGROUND ==========
+# ========== MAIN APP BACKGROUND & FORCE 2 COLUMNS ON MOBILE ==========
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%) !important; font-family: 'Inter', sans-serif; overflow: auto; }
@@ -64,7 +64,7 @@ st.markdown("""
     .main > div { padding: 0rem 1rem; }
     .km-earth-card { background: #fffaf0; border: 1px solid #dcc9a2; border-radius: 18px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
     .user-msg, .bot-msg { background: white; border-radius: 20px; padding: 0.8rem; margin: 0.8rem 0; border-left: 5px solid #7a5c2e; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    /* Style for feature cards (when using buttons) – not used in new grid, but keep */
+    /* Style for feature cards (buttons) */
     .stButton > button {
         background-color: #f1f8e9 !important;
         border: 1px solid #a5d6a7 !important;
@@ -80,6 +80,14 @@ st.markdown("""
         background-color: #e8f5e9 !important;
         transform: translateY(-4px);
         box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    /* Force 2 columns on mobile */
+    div[data-testid="column"] {
+        min-width: 45% !important;
+        flex: 1 1 auto !important;
+    }
+    .stColumns {
+        flex-wrap: nowrap !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -283,7 +291,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions (unchanged) ----------
+# ---------- Helper Functions ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -746,7 +754,7 @@ def feature_nabard():
     with st.expander(t("nabard_updates"), expanded=False):
         st.markdown("[NABARD WhatsApp Channel](https://wa.me/91XXXXXXXXXX?text=Join) | [NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
 
-# ========== DASHBOARD (HTML/CSS Grid – forces 2 columns on mobile) ==========
+# ========== DASHBOARD (2 columns, 5 rows, forced 2 cols on mobile using CSS) ==========
 def show_dashboard():
     st.markdown(f"""
     <div style='background:#e8f5e9;padding:0.8rem 1.2rem;border-radius:20px;
@@ -770,33 +778,20 @@ def show_dashboard():
         (t("nabard_title"), "🏦", t("nabard_desc"), "nabard"),
     ]
     
-    # Build HTML grid – 2 columns, auto rows
-    grid_html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">'
-    for title, icon, desc, key in features:
-        # Create a clickable card that sets a URL parameter
-        grid_html += f'''
-        <a href="?feature={key}" style="text-decoration: none;">
-            <div style="background:#f1f8e9; border:1px solid #a5d6a7; border-radius:20px; padding:1rem 0.5rem; text-align:center; cursor:pointer; transition:0.2s;">
-                <div style="font-size:2rem;">{icon}</div>
-                <div style="font-weight:600; margin:0.5rem 0 0.2rem; color:#2e7d32;">{title}</div>
-                <div style="font-size:0.75rem; color:#558b2f;">{desc}</div>
-            </div>
-        </a>
-        '''
-    grid_html += '</div>'
-    st.markdown(grid_html, unsafe_allow_html=True)
+    # Display in 2 columns, 5 rows using standard Streamlit buttons
+    for i in range(0, len(features), 2):
+        cols = st.columns(2)
+        for j in range(2):
+            if i + j < len(features):
+                title, icon, desc, key = features[i+j]
+                button_label = f"{icon}\n\n**{title}**\n\n{desc}"
+                if cols[j].button(button_label, use_container_width=True):
+                    st.session_state.selected_feature = key
+                    st.rerun()
     st.markdown("---")
     st.caption(t("footer"))
 
-# ========== MAIN FLOW (with query parameter handling) ==========
-# Check if a feature was selected via URL parameter
-if "feature" in st.query_params:
-    selected = st.query_params["feature"]
-    if selected in ["voice", "market", "weather", "soil", "advice", "rotation", "women", "schemes", "kvk", "nabard"]:
-        st.session_state.selected_feature = selected
-        # Clear the URL parameter to avoid re‑selection on refresh
-        st.query_params.clear()
-
+# ========== MAIN FLOW ==========
 if st.session_state.selected_feature is None:
     show_dashboard()
 else:
