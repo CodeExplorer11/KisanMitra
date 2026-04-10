@@ -114,15 +114,14 @@ if not GEMINI_API_KEY:
     st.stop()
 
 GEMINI_API_KEY = GEMINI_API_KEY.strip().strip('"').strip("'")
-available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-if not available_models:
-    st.error("No models available.")
-    st.stop()
-MODEL_NAME = available_models[0]
 genai.configure(api_key=GEMINI_API_KEY)
+
+# Use a model with high free tier quota (60 requests/min)
+MODEL_NAME = "models/gemini-1.5-flash"   # or "models/gemini-1.5-pro" if needed
+st.info(f"Using model: {MODEL_NAME}")
+
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
-
 # ---------- Caching for scalability ----------
 def cache(ttl_seconds=300):
     def decorator(func):
