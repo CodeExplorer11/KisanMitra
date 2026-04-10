@@ -20,7 +20,7 @@ if "entered_app" not in st.session_state:
 if "selected_feature" not in st.session_state:
     st.session_state.selected_feature = None
 
-# ========== LANDING PAGE (fixed image URL) ==========
+# ========== LANDING PAGE ==========
 if not st.session_state.entered_app:
     st.markdown("""
     <style>
@@ -114,12 +114,37 @@ if not GEMINI_API_KEY:
     st.stop()
 
 GEMINI_API_KEY = GEMINI_API_KEY.strip().strip('"').strip("'")
+
+# ---------- Configure Gemini with preferred model (higher quota) ----------
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Use a model with high free tier quota (60 requests/min)
-MODEL_NAME = "models/gemini-1.5-flash"   # or "models/gemini-1.5-pro" if needed
-st.info(f"Using model: {MODEL_NAME}")
+# Prefer models with higher free tier quotas (60 requests/min)
+preferred_models = [
+    "models/gemini-1.5-flash",
+    "models/gemini-2.0-flash-exp",
+    "models/gemini-1.5-pro",
+]
 
+MODEL_NAME = None
+for pm in preferred_models:
+    try:
+        # Test if model exists and works
+        test_model = genai.GenerativeModel(pm)
+        test_model.generate_content("Test")
+        MODEL_NAME = pm
+        break
+    except:
+        continue
+
+# Fallback to first available if preferred models don't work
+if not MODEL_NAME:
+    available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+    if not available_models:
+        st.error("No models available.")
+        st.stop()
+    MODEL_NAME = available_models[0]
+
+st.info(f"Using model: {MODEL_NAME}")
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
 
@@ -335,18 +360,12 @@ with st.sidebar:
 
 # ---------- Helper Functions ----------
 def transcribe_audio(audio_bytes):
-    """Transcribe audio with explicit Hindi support."""
     try:
         recognizer = sr.Recognizer()
         with sr.AudioFile(io.BytesIO(audio_bytes)) as source:
             audio_data = recognizer.record(source)
-        # 🔧 FIX: Explicitly set language to Hindi (India)
-        return recognizer.recognize_google(audio_data, language='hi-IN')
-    except sr.UnknownValueError:
-        return None
-    except sr.RequestError as e:
-        st.error(f"Speech recognition service error: {e}")
-        return None
+        return recognizer.recognize_google(audio_data)
+    except: return None
 
 def detect_language(text):
     return "Hindi" if any('\u0900' <= c <= '\u097f' for c in text) else "English"
@@ -374,11 +393,12 @@ def get_ai_response(question, lang):
 Response language: {force_lang}
 Farmer asked: "{question}"
 Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer in the same language as the question."""
-    try: return model.generate_content(prompt).text
+    try:
+        return model.generate_content(prompt).text
     except Exception as e:
         error_str = str(e)
         if "429" in error_str or "quota" in error_str.lower():
-            return "⚠️ Too many requests. The free API limit is 60 requests per minute. Please wait a moment and try again."
+            return "⚠️ Too many requests right now. The free API has a limit. Please wait a minute and try again. (Quota exceeded)"
         return f"⚠️ AI error: {str(e)[:100]}"
 
 def get_weather_forecast(city):
@@ -453,11 +473,12 @@ Response language: {force_lang}
 User says: "{user_input}"
 Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging.
 CRITICAL: Answer in the same language as the user."""
-    try: return model.generate_content(prompt).text
+    try:
+        return model.generate_content(prompt).text
     except Exception as e:
         error_str = str(e)
         if "429" in error_str or "quota" in error_str.lower():
-            return "⚠️ Too many requests. Please wait a minute and try again."
+            return "⚠️ Too many requests. Please wait a minute and try again. (API quota exceeded)"
         return f"⚠️ Error: {str(e)[:100]}"
 
 def get_kvk_by_district(district):
@@ -530,7 +551,7 @@ SCHEMES_DATA = {
     ]
 }
 
-# ========== FEATURE FUNCTIONS (unchanged except added rate limit handling) ==========
+# ========== FEATURE FUNCTIONS ==========
 def feature_voice_assistant():
     st.header(t("voice_header"))
     if st.button(t("voice_stop"), key="stop_voice_btn"):
@@ -585,8 +606,11 @@ def feature_market_prices():
                 try:
                     advice = model.generate_content(rag_prompt)
                     st.info(f"💡 **AI Advice:** {advice.text}")
-                except:
-                    st.info("💡 AI advice: Compare prices across nearby mandis using our app's directory.")
+                except Exception as e:
+                    if "429" in str(e):
+                        st.info("💡 AI advice temporarily unavailable due to quota. Please try again in a minute.")
+                    else:
+                        st.info("💡 AI advice: Compare prices across nearby mandis using our app's directory.")
 
 def feature_weather():
     st.header(t("weather_header"))
@@ -787,7 +811,11 @@ def feature_nabard():
                         response = model.generate_content(prompt)
                         st.success("**AI Recommendation:**")
                         st.markdown(f'<div class="bot-msg">🤖 {response.text}</div>', unsafe_allow_html=True)
-                    except: st.error("AI error.")
+                    except Exception as e:
+                        if "429" in str(e):
+                            st.warning("AI recommendation temporarily unavailable due to high demand. Please try again in a minute.")
+                        else:
+                            st.error("AI error.")
     with st.expander(t("nabard_schemes_title"), expanded=False):
         nabard_schemes = {
             "Credit & Loans": [{"name": "Kisan Credit Card (KCC)", "desc": "Flexible credit for cultivation.", "link": "https://www.nabard.org/content.aspx?id=566"}],
@@ -881,7 +909,11 @@ Keep it practical, short, and in simple language."""
                         st.write(f"**Market Price:** ₹{price_info['price']}/quintal for {crop}")
                         st.write(f"**Farmer Profile:** {profile}")
                 except Exception as e:
-                    st.error(f"Error generating report: {e}")
+                    error_str = str(e)
+                    if "429" in error_str or "quota" in error_str.lower():
+                        st.error("⚠️ Unable to generate report due to high demand. The free API quota has been exceeded. Please wait a minute and try again.")
+                    else:
+                        st.error(f"Error generating report: {e}")
 
 # ========== DASHBOARD ==========
 def show_dashboard():
