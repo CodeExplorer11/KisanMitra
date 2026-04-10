@@ -26,7 +26,7 @@ if not st.session_state.entered_app:
         .stApp { background: linear-gradient(145deg, #2d6a4f, #1b4332) !important; }
         .landing-wrapper {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('https://cdn.pixabay.com/photo/2016/11/14/04/08/farmer-1822530_640.jpg');
+            background-image: url("https://seedballs.in/cdn/shop/articles/farmers_day.jpg?v%3D1766078534%26width%3D500&tbnid=RlsNKxP2FS9MqM&vet=1&imgrefurl=https://seedballs.in/blogs/blog/farmers-day-a-powerful-tribute-to-the-heroes-who-feed-the-world?srsltid%3DAfmBOopnwkDKXlplhKwnEADvnfam6_i_f2Sn9o2cIoE2-xl-FURpeHvw&docid=76GBYt0Qf-3NPM&w=500&h=750&hl=en-IN&source=sh/x/im/m1/4&kgs=075546ed03e1bd58&utm_source=sh/x/im/m1/4");
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center; color: white; font-family: 'Inter', sans-serif; z-index: 999;
