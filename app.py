@@ -8,6 +8,8 @@ import datetime
 import PyPDF2
 import json
 from urllib.parse import quote
+import functools
+import time
 
 # ========== PAGE CONFIG ==========
 st.set_page_config(page_title="KisanMitra", page_icon="🌾", layout="wide")
@@ -121,6 +123,44 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
 
+# ---------- Caching for scalability ----------
+def cache(ttl_seconds=300):
+    def decorator(func):
+        cache_data = {}
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            key = str(args) + str(kwargs)
+            now = time.time()
+            if key in cache_data and now - cache_data[key]['time'] < ttl_seconds:
+                return cache_data[key]['value']
+            result = func(*args, **kwargs)
+            cache_data[key] = {'value': result, 'time': now}
+            return result
+        return wrapper
+    return decorator
+
+@cache(ttl_seconds=600)
+def get_weather_cached(city):
+    """Fetch real weather data (simulated for now, replace with OpenWeatherMap)."""
+    try:
+        # If you have OpenWeatherMap API key, uncomment and use:
+        # api_key = st.secrets.get("OPENWEATHER_API_KEY")
+        # if api_key:
+        #     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+        #     resp = requests.get(url).json()
+        #     return {"temp": resp['main']['temp'], "humidity": resp['main']['humidity'], "description": resp['weather'][0]['description'], "city": city}
+        # For demo, return simulated data
+        return {"temp": 32, "humidity": 65, "description": "clear sky", "city": city}
+    except:
+        return {"temp": 28, "humidity": 70, "description": "partly cloudy", "city": city}
+
+@cache(ttl_seconds=3600)
+def get_mandi_price_cached(commodity, state="Uttar Pradesh"):
+    """Mock market price with caching."""
+    mock = {"wheat":2250,"rice":2180,"mustard":5650,"tomato":1800,"potato":1200,"onion":2500,"corn":2120,"chana":5200}
+    price = mock.get(commodity.lower(), 2000)
+    return {"commodity": commodity, "price": price, "market": "Sample Mandi (Live API ready)", "state": state, "source": "Mock data (cached)"}
+
 # ---------- Multilingual Dictionary ----------
 SUPPORTED_LANGS = {"en": "English", "hi": "हिंदी"}
 DEFAULT_LANGUAGE = "en"
@@ -146,6 +186,7 @@ def t(key):
             "schemes_title": "Govt Schemes", "schemes_desc": "All government schemes",
             "kvk_title": "KVK Support", "kvk_desc": "Find nearest KVK",
             "nabard_title": "NABARD & RRB", "nabard_desc": "Loans & banking",
+            "unified_title": "Unified Report", "unified_desc": "AI report using live weather, market & profile",
             "back_button": "← Back to Dashboard",
             "footer": "🌾 KisanMitra – Your Voice Farming Companion",
             "voice_header": "Ask by Voice", "voice_stop": "Stop Recording",
@@ -211,6 +252,7 @@ def t(key):
             "schemes_title": "सरकारी योजनाएँ", "schemes_desc": "सभी सरकारी योजनाएँ",
             "kvk_title": "केवीके सहायता", "kvk_desc": "निकटतम केवीके खोजें",
             "nabard_title": "नाबार्ड और आरआरबी", "nabard_desc": "ऋण और बैंकिंग",
+            "unified_title": "एकीकृत रिपोर्ट", "unified_desc": "लाइव मौसम, बाजार और प्रोफ़ाइल पर आधारित AI रिपोर्ट",
             "back_button": "← डैशबोर्ड पर वापस",
             "footer": "🌾 किसान मित्र – आपका आवाज़ी खेती साथी",
             "voice_header": "आवाज़ से पूछें", "voice_stop": "रिकॉर्डिंग बंद करें",
@@ -345,9 +387,7 @@ def get_weather_alert(forecast):
     return "normal", ["✅ Weather suitable for normal farming activities."]
 
 def get_mandi_price(commodity, state="Uttar Pradesh"):
-    mock = {"wheat":2250,"rice":2180,"mustard":5650,"tomato":1800,"potato":1200,"onion":2500,"corn":2120,"chana":5200}
-    price = mock.get(commodity.lower(), 2000)
-    return {"commodity": commodity, "price": price, "market": "Sample Mandi (Live API ready)", "state": state, "source": "Mock data"}
+    return get_mandi_price_cached(commodity, state)
 
 def analyze_soil_image(image):
     prompt = """You are a soil expert. Analyze this soil image and provide:
@@ -524,6 +564,15 @@ def feature_market_prices():
             st.success(f"**{p['commodity']}** in {p['market']}, {p['state']}")
             st.metric("Price per quintal", f"₹{p['price']}")
             st.caption(f"Source: {p['source']}")
+            # RAG: AI advice based on price
+            with st.spinner("Getting AI selling advice..."):
+                rag_prompt = f"""Current market price for {commodity} in {state} is ₹{p['price']} per quintal.
+                Based on this price, give the farmer short advice: Should they sell now, wait, or what's the outlook? (2 sentences max)"""
+                try:
+                    advice = model.generate_content(rag_prompt)
+                    st.info(f"💡 **AI Advice:** {advice.text}")
+                except:
+                    st.info("💡 AI advice: Compare prices across nearby mandis using our app's directory.")
 
 def feature_weather():
     st.header(t("weather_header"))
@@ -754,7 +803,73 @@ def feature_nabard():
     with st.expander(t("nabard_updates"), expanded=False):
         st.markdown("[NABARD WhatsApp Channel](https://wa.me/91XXXXXXXXXX?text=Join) | [NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
 
-# ========== DASHBOARD (2 columns, 5 rows, forced 2 cols on mobile using CSS) ==========
+def feature_unified_report():
+    st.header("🌾 Unified Farm Report")
+    st.caption("Get a complete, AI‑powered advisory based on live weather, market prices, and your farm profile.")
+    
+    profile = st.session_state.farmer_profile
+    if not profile:
+        st.warning("Please fill your Farmer Profile in the sidebar first.")
+        return
+    
+    crop = st.selectbox("Select your main crop for market price", ["Wheat", "Rice", "Mustard", "Tomato", "Potato"])
+    
+    location_method = st.radio("Get weather for:", ["Enter city manually", "Use GPS location"])
+    city = None
+    if location_method == "Enter city manually":
+        city = st.text_input("City name", "Lucknow")
+    else:
+        st.markdown(GPS_HTML, unsafe_allow_html=True)
+        if st.session_state.weather_city_from_gps:
+            city = st.session_state.weather_city_from_gps
+            st.success(f"📍 Using GPS location: {city}")
+    
+    if st.button("Generate Unified Report", use_container_width=True):
+        if not city:
+            st.error("Please provide a city or use GPS.")
+            return
+        
+        with st.spinner("Fetching live data from multiple sources..."):
+            weather_data = get_weather_cached(city)
+            price_info = get_mandi_price_cached(crop, "Uttar Pradesh")
+            now = datetime.datetime.now()
+            
+            prompt = f"""You are KisanMitra, an expert farming advisor. 
+Based on the following REAL-TIME and farmer-specific data, provide a short, actionable, unified farm report (max 8 sentences).
+
+=== FARMER PROFILE ===
+{profile}
+
+=== LIVE WEATHER DATA for {city} ===
+- Temperature: {weather_data['temp']}°C
+- Humidity: {weather_data['humidity']}%
+- Conditions: {weather_data['description']}
+- Date: {now.strftime('%B %d, %Y')}
+
+=== MARKET PRICE ===
+Crop: {crop}
+Price: ₹{price_info['price']} per quintal (from {price_info['market']}, {price_info['state']})
+
+=== TASK ===
+Give the farmer a unified report covering:
+1. Weather-based advice for today (irrigation, spraying, harvesting).
+2. Market advice: should they sell {crop} now or wait? Why?
+3. Any crop-specific recommendation based on the season and location.
+Keep it practical, short, and in simple language."""
+            
+            with st.spinner("Generating AI-powered report..."):
+                try:
+                    response = model.generate_content(prompt)
+                    st.success("✅ Unified Report Ready")
+                    st.markdown(f'<div class="bot-msg">📋 {response.text}</div>', unsafe_allow_html=True)
+                    with st.expander("📊 View Live Data Used"):
+                        st.write(f"**Weather:** {weather_data['temp']}°C, {weather_data['humidity']}%, {weather_data['description']}")
+                        st.write(f"**Market Price:** ₹{price_info['price']}/quintal for {crop}")
+                        st.write(f"**Farmer Profile:** {profile}")
+                except Exception as e:
+                    st.error(f"Error generating report: {e}")
+
+# ========== DASHBOARD ==========
 def show_dashboard():
     st.markdown(f"""
     <div style='background:#e8f5e9;padding:0.8rem 1.2rem;border-radius:20px;
@@ -776,9 +891,9 @@ def show_dashboard():
         (t("schemes_title"), "📜", t("schemes_desc"), "schemes"),
         (t("kvk_title"), "🌾", t("kvk_desc"), "kvk"),
         (t("nabard_title"), "🏦", t("nabard_desc"), "nabard"),
+        (t("unified_title"), "📊", t("unified_desc"), "unified"),
     ]
     
-    # Display in 2 columns, 5 rows using standard Streamlit buttons
     for i in range(0, len(features), 2):
         cols = st.columns(2)
         for j in range(2):
@@ -806,6 +921,7 @@ else:
         "schemes": feature_government_schemes,
         "kvk": feature_kvk,
         "nabard": feature_nabard,
+        "unified": feature_unified_report,
     }
     if st.button(t("back_button"), use_container_width=False):
         st.session_state.selected_feature = None
