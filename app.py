@@ -18,7 +18,7 @@ if "entered_app" not in st.session_state:
 if "selected_feature" not in st.session_state:
     st.session_state.selected_feature = None
 
-# ========== LANDING PAGE ==========
+# ========== LANDING PAGE (with fixed image URL) ==========
 if not st.session_state.entered_app:
     st.markdown("""
     <style>
@@ -55,7 +55,7 @@ if not st.session_state.entered_app:
         st.rerun()
     st.stop()
 
-# ========== MAIN APP BACKGROUND ==========
+# ========== MAIN APP BACKGROUND & FORCE 2 COLUMNS ON MOBILE ==========
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%) !important; font-family: 'Inter', sans-serif; overflow: auto; }
@@ -80,6 +80,14 @@ st.markdown("""
         background-color: #e8f5e9 !important;
         transform: translateY(-4px);
         box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    /* Force 2 columns on mobile */
+    div[data-testid="column"] {
+        min-width: 45% !important;
+        flex: 1 1 auto !important;
+    }
+    .stColumns {
+        flex-wrap: nowrap !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -283,7 +291,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions (unchanged, abbreviated for space but fully functional) ----------
+# ---------- Helper Functions ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -468,7 +476,7 @@ SCHEMES_DATA = {
     ]
 }
 
-# ========== FEATURE FUNCTIONS (abbreviated for brevity but all present) ==========
+# ========== FEATURE FUNCTIONS ==========
 def feature_voice_assistant():
     st.header(t("voice_header"))
     if st.button(t("voice_stop"), key="stop_voice_btn"):
@@ -744,9 +752,9 @@ def feature_nabard():
             else:
                 st.success("Madhyanchal Gramin Bank – 0755-2551234")
     with st.expander(t("nabard_updates"), expanded=False):
-        st.markdown("[NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
+        st.markdown("[NABARD WhatsApp Channel](https://wa.me/91XXXXXXXXXX?text=Join) | [NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
 
-# ========== DASHBOARD (2 columns, 5 rows, using standard Streamlit buttons) ==========
+# ========== DASHBOARD (2 columns, 5 rows, forced 2 cols on mobile) ==========
 def show_dashboard():
     st.markdown(f"""
     <div style='background:#e8f5e9;padding:0.8rem 1.2rem;border-radius:20px;
@@ -770,25 +778,19 @@ def show_dashboard():
         (t("nabard_title"), "🏦", t("nabard_desc"), "nabard"),
     ]
     
-    # Build HTML grid (2 columns, auto rows)
-    grid_html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">'
-    for title, icon, desc, key in features:
-        grid_html += f'''
-        <div style="background:#f1f8e9; border:1px solid #a5d6a7; border-radius:20px; padding:1rem 0.5rem; text-align:center; cursor:pointer;" onclick="document.getElementById('btn_{key}').click();">
-            <div style="font-size:2rem;">{icon}</div>
-            <div style="font-weight:600; margin:0.5rem 0 0.2rem; color:#2e7d32;">{title}</div>
-            <div style="font-size:0.75rem; color:#558b2f;">{desc}</div>
-        </div>
-        '''
-    grid_html += '</div>'
-    st.markdown(grid_html, unsafe_allow_html=True)
-    
-    # Hidden Streamlit buttons to trigger the feature selection
-    for title, icon, desc, key in features:
-        st.button(f"hidden_{key}", key=f"btn_{key}", style="display:none;")
-    
+    # Display in 2 columns, 5 rows
+    for i in range(0, len(features), 2):
+        cols = st.columns(2)
+        for j in range(2):
+            if i + j < len(features):
+                title, icon, desc, key = features[i+j]
+                button_label = f"{icon}\n\n**{title}**\n\n{desc}"
+                if cols[j].button(button_label, use_container_width=True):
+                    st.session_state.selected_feature = key
+                    st.rerun()
     st.markdown("---")
     st.caption(t("footer"))
+
 # ========== MAIN FLOW ==========
 if st.session_state.selected_feature is None:
     show_dashboard()
