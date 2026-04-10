@@ -26,7 +26,7 @@ if not st.session_state.entered_app:
         .stApp { background: linear-gradient(145deg, #2d6a4f, #1b4332) !important; }
         .landing-wrapper {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('https://cdn.pixabay.com/photo/2016/11/14/04/08/farmer-1822530_640.jpg');
+            background-image: url("https://seedballs.in/cdn/shop/articles/farmers_day.jpg?v%3D1766078534%26width%3D500&tbnid=RlsNKxP2FS9MqM&vet=1&imgrefurl=https://seedballs.in/blogs/blog/farmers-day-a-powerful-tribute-to-the-heroes-who-feed-the-world?srsltid%3DAfmBOopnwkDKXlplhKwnEADvnfam6_i_f2Sn9o2cIoE2-xl-FURpeHvw&docid=76GBYt0Qf-3NPM&w=500&h=750&hl=en-IN&source=sh/x/im/m1/4&kgs=075546ed03e1bd58&utm_source=sh/x/im/m1/4");
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center; color: white; font-family: 'Inter', sans-serif; z-index: 999;
@@ -55,23 +55,40 @@ if not st.session_state.entered_app:
         st.rerun()
     st.stop()
 
-# ========== MAIN APP BACKGROUND ==========
+# ========== MAIN APP BACKGROUND (greenish theme) ==========
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(180deg, #f6f1e5 0%, #efe7d3 100%) !important; font-family: 'Inter', sans-serif; overflow: auto; }
+    .stApp { background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%) !important; font-family: 'Inter', sans-serif; overflow: auto; }
     [data-testid="stSidebar"] { background: #d9c8a5 !important; }
     [data-testid="stSidebar"] * { color: #2f2516 !important; }
     .main > div { padding: 0rem 1rem; }
-    /* Feature card styling */
+    /* Feature card styling – greenish */
     .feature-card {
-        background: white; border-radius: 20px; padding: 1.5rem 0.8rem; text-align: center;
+        background: white; border-radius: 20px; padding: 1.2rem 0.5rem; text-align: center;
         box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.2s; cursor: pointer;
-        border: 1px solid #e0d6c0; margin-bottom: 1rem;
+        border: 1px solid #a5d6a7; margin-bottom: 1rem;
+        background-color: #f1f8e9;
     }
-    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); background-color: #e8f5e9; }
     .feature-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
-    .feature-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.3rem; color: #4a3f2b; }
-    .feature-desc { font-size: 0.8rem; color: #7a6a4a; }
+    .feature-title { font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem; color: #2e7d32; }
+    .feature-desc { font-size: 0.75rem; color: #558b2f; }
+    /* Make buttons look like cards */
+    div[data-testid="column"] > div > div > button {
+        background: #f1f8e9 !important;
+        border: 1px solid #a5d6a7 !important;
+        border-radius: 20px !important;
+        padding: 1rem 0.5rem !important;
+        height: auto !important;
+        white-space: normal !important;
+        font-family: inherit !important;
+        transition: 0.2s;
+    }
+    div[data-testid="column"] > div > div > button:hover {
+        background: #e8f5e9 !important;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -155,7 +172,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions (all original, unchanged) ----------
+# ---------- Helper Functions (unchanged) ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -340,8 +357,7 @@ SCHEMES_DATA = {
     ]
 }
 
-# ========== FEATURE FUNCTIONS ==========
-
+# ========== FEATURE FUNCTIONS (unchanged, but for brevity I keep them here – they are identical to previous version) ==========
 def feature_voice_assistant():
     st.header("Ask by Voice")
     if st.button("Stop Recording", key="stop_voice_btn"):
@@ -617,13 +633,13 @@ def feature_nabard():
     with st.expander("🔔 Live Updates & Grievance", expanded=False):
         st.markdown("[NABARD WhatsApp Channel](https://wa.me/91XXXXXXXXXX?text=Join) | [NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
 
-# ========== DASHBOARD (Feature Grid) ==========
+# ========== DASHBOARD (2 rows × 5 columns, greenish) ==========
 def show_dashboard():
     st.markdown("""
-    <div style='background:#fffaf0;padding:0.8rem 1.2rem;border-radius:20px;
-    border:1px solid #dcc9a2;margin-bottom:1rem'>
-        <h3 style='margin:0;color:#4a3f2b;'>🌾 KisanMitra</h3>
-        <p style='margin:0;color:#6b5a3a;font-size:0.85rem;'>AI-powered smart farming assistant</p>
+    <div style='background:#e8f5e9;padding:0.8rem 1.2rem;border-radius:20px;
+    border:1px solid #a5d6a7;margin-bottom:1rem'>
+        <h3 style='margin:0;color:#2e7d32;'>🌾 KisanMitra</h3>
+        <p style='margin:0;color:#558b2f;font-size:0.85rem;'>AI-powered smart farming assistant</p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("### 🌟 Choose a Service")
@@ -639,9 +655,20 @@ def show_dashboard():
         ("kvk", "KVK Support", "🌾", "Find nearest KVK", feature_kvk),
         ("nabard", "NABARD & RRB", "🏦", "Loans & banking", feature_nabard),
     ]
-    cols = st.columns(2)
-    for idx, (key, title, icon, desc, func) in enumerate(features):
-        with cols[idx % 2]:
+    # Split into two rows of 5 columns each
+    row1 = features[:5]
+    row2 = features[5:]
+    # Display first row (5 columns)
+    cols = st.columns(5)
+    for idx, (key, title, icon, desc, func) in enumerate(row1):
+        with cols[idx]:
+            if st.button(f"{icon}\n\n**{title}**\n\n{desc}", use_container_width=True):
+                st.session_state.selected_feature = key
+                st.rerun()
+    # Display second row (5 columns)
+    cols = st.columns(5)
+    for idx, (key, title, icon, desc, func) in enumerate(row2):
+        with cols[idx]:
             if st.button(f"{icon}\n\n**{title}**\n\n{desc}", use_container_width=True):
                 st.session_state.selected_feature = key
                 st.rerun()
@@ -669,7 +696,7 @@ else:
         st.rerun()
     feature_map[st.session_state.selected_feature]()
 
-# ========== FLOATING CHATBOT (always available) ==========
+# ========== FLOATING CHATBOT ==========
 with st.popover("💬 Help", use_container_width=False, help="Ask me about farming or using the app"):
     st.markdown("### KisanMitra Assistant")
     st.info("Ask me anything about farming or using the app.")
