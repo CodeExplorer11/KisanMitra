@@ -20,7 +20,7 @@ if "entered_app" not in st.session_state:
 if "selected_feature" not in st.session_state:
     st.session_state.selected_feature = None
 
-# ========== LANDING PAGE ==========
+# ========== LANDING PAGE (fixed image URL) ==========
 if not st.session_state.entered_app:
     st.markdown("""
     <style>
@@ -122,6 +122,7 @@ st.info(f"Using model: {MODEL_NAME}")
 
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
+
 # ---------- Caching for scalability ----------
 def cache(ttl_seconds=300):
     def decorator(func):
@@ -334,12 +335,18 @@ with st.sidebar:
 
 # ---------- Helper Functions ----------
 def transcribe_audio(audio_bytes):
+    """Transcribe audio with explicit Hindi support."""
     try:
         recognizer = sr.Recognizer()
         with sr.AudioFile(io.BytesIO(audio_bytes)) as source:
             audio_data = recognizer.record(source)
-        return recognizer.recognize_google(audio_data)
-    except: return None
+        # 🔧 FIX: Explicitly set language to Hindi (India)
+        return recognizer.recognize_google(audio_data, language='hi-IN')
+    except sr.UnknownValueError:
+        return None
+    except sr.RequestError as e:
+        st.error(f"Speech recognition service error: {e}")
+        return None
 
 def detect_language(text):
     return "Hindi" if any('\u0900' <= c <= '\u097f' for c in text) else "English"
@@ -368,7 +375,11 @@ Response language: {force_lang}
 Farmer asked: "{question}"
 Give a short, practical, actionable answer (max 3 sentences). CRITICAL: Answer in the same language as the question."""
     try: return model.generate_content(prompt).text
-    except Exception as e: return f"⚠️ AI error: {str(e)}"
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str or "quota" in error_str.lower():
+            return "⚠️ Too many requests. The free API limit is 60 requests per minute. Please wait a moment and try again."
+        return f"⚠️ AI error: {str(e)[:100]}"
 
 def get_weather_forecast(city):
     return {
@@ -443,7 +454,11 @@ User says: "{user_input}"
 Give a short, friendly, helpful answer (max 2 sentences). Keep it warm and encouraging.
 CRITICAL: Answer in the same language as the user."""
     try: return model.generate_content(prompt).text
-    except Exception as e: return f"⚠️ Error: {str(e)[:100]}"
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str or "quota" in error_str.lower():
+            return "⚠️ Too many requests. Please wait a minute and try again."
+        return f"⚠️ Error: {str(e)[:100]}"
 
 def get_kvk_by_district(district):
     kvk_data = [
@@ -515,7 +530,7 @@ SCHEMES_DATA = {
     ]
 }
 
-# ========== FEATURE FUNCTIONS ==========
+# ========== FEATURE FUNCTIONS (unchanged except added rate limit handling) ==========
 def feature_voice_assistant():
     st.header(t("voice_header"))
     if st.button(t("voice_stop"), key="stop_voice_btn"):
