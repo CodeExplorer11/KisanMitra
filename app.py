@@ -744,7 +744,7 @@ def feature_nabard():
             else:
                 st.success("Madhyanchal Gramin Bank – 0755-2551234")
     with st.expander(t("nabard_updates"), expanded=False):
-        st.markdown("[NABARD WhatsApp Channel" [NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
+        st.markdown("[NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
 
 # ========== DASHBOARD (2 columns, 5 rows, using standard Streamlit buttons) ==========
 def show_dashboard():
