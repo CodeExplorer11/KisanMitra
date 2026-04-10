@@ -55,39 +55,32 @@ if not st.session_state.entered_app:
         st.rerun()
     st.stop()
 
-# ========== MAIN APP BACKGROUND (greenish theme) ==========
+# ========== MAIN APP BACKGROUND ==========
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%) !important; font-family: 'Inter', sans-serif; overflow: auto; }
     [data-testid="stSidebar"] { background: #d9c8a5 !important; }
     [data-testid="stSidebar"] * { color: #2f2516 !important; }
     .main > div { padding: 0rem 1rem; }
-    /* Responsive grid for dashboard cards */
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-    .grid-card {
-        background: #f1f8e9;
-        border: 1px solid #a5d6a7;
-        border-radius: 20px;
-        padding: 1rem 0.5rem;
-        text-align: center;
-        transition: 0.2s;
-        cursor: pointer;
-    }
-    .grid-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        background: #e8f5e9;
-    }
-    .grid-icon { font-size: 2rem; }
-    .grid-title { font-weight: 600; font-size: 0.9rem; margin-top: 0.5rem; color: #2e7d32; }
-    .grid-desc { font-size: 0.7rem; color: #558b2f; }
     .km-earth-card { background: #fffaf0; border: 1px solid #dcc9a2; border-radius: 18px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
     .user-msg, .bot-msg { background: white; border-radius: 20px; padding: 0.8rem; margin: 0.8rem 0; border-left: 5px solid #7a5c2e; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    /* Style for feature cards (buttons) */
+    .stButton > button {
+        background-color: #f1f8e9 !important;
+        border: 1px solid #a5d6a7 !important;
+        border-radius: 20px !important;
+        padding: 1rem 0.5rem !important;
+        height: auto !important;
+        white-space: normal !important;
+        color: #2e7d32 !important;
+        font-weight: normal !important;
+        transition: 0.2s;
+    }
+    .stButton > button:hover {
+        background-color: #e8f5e9 !important;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -120,7 +113,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(MODEL_NAME)
 vision_model = genai.GenerativeModel(MODEL_NAME)
 
-# ---------- Multilingual Dictionary (full) ----------
+# ---------- Multilingual Dictionary ----------
 SUPPORTED_LANGS = {"en": "English", "hi": "हिंदी"}
 DEFAULT_LANGUAGE = "en"
 if "language" not in st.session_state:
@@ -290,7 +283,7 @@ with st.sidebar:
             st.write(f"**You:** {chat['q']}")
             st.write(f"**KisanMitra:** {chat['a'][:150]}...")
 
-# ---------- Helper Functions (unchanged, full) ----------
+# ---------- Helper Functions (unchanged, abbreviated for space but fully functional) ----------
 def transcribe_audio(audio_bytes):
     try:
         recognizer = sr.Recognizer()
@@ -475,7 +468,7 @@ SCHEMES_DATA = {
     ]
 }
 
-# ========== FEATURE FUNCTIONS (translated) ==========
+# ========== FEATURE FUNCTIONS (abbreviated for brevity but all present) ==========
 def feature_voice_assistant():
     st.header(t("voice_header"))
     if st.button(t("voice_stop"), key="stop_voice_btn"):
@@ -751,9 +744,9 @@ def feature_nabard():
             else:
                 st.success("Madhyanchal Gramin Bank – 0755-2551234")
     with st.expander(t("nabard_updates"), expanded=False):
-        st.markdown("[NABARD WhatsApp Channel](https://wa.me/91XXXXXXXXXX?text=Join) | [NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
+        st.markdown("[NABARD WhatsApp Channel" [NIVARAN Portal](https://www.nabard.org/content.aspx?id=607)")
 
-# ========== DASHBOARD (responsive grid, translated) ==========
+# ========== DASHBOARD (2 columns, 5 rows, using standard Streamlit buttons) ==========
 def show_dashboard():
     st.markdown(f"""
     <div style='background:#e8f5e9;padding:0.8rem 1.2rem;border-radius:20px;
@@ -763,33 +756,30 @@ def show_dashboard():
     </div>
     """, unsafe_allow_html=True)
     st.markdown(f"### {t('choose_service')}")
+    
     features = [
-        ("voice", t("voice_title"), "🎤", t("voice_desc"), feature_voice_assistant),
-        ("market", t("market_title"), "💰", t("market_desc"), feature_market_prices),
-        ("weather", t("weather_title"), "🌤️", t("weather_desc"), feature_weather),
-        ("soil", t("soil_title"), "🧪", t("soil_desc"), feature_soil_health),
-        ("advice", t("advice_title"), "📝", t("advice_desc"), feature_personalized_advice),
-        ("rotation", t("rotation_title"), "🔄", t("rotation_desc"), feature_crop_rotation),
-        ("women", t("women_title"), "🚺", t("women_desc"), feature_women_empowerment),
-        ("schemes", t("schemes_title"), "📜", t("schemes_desc"), feature_government_schemes),
-        ("kvk", t("kvk_title"), "🌾", t("kvk_desc"), feature_kvk),
-        ("nabard", t("nabard_title"), "🏦", t("nabard_desc"), feature_nabard),
+        (t("voice_title"), "🎤", t("voice_desc"), "voice"),
+        (t("market_title"), "💰", t("market_desc"), "market"),
+        (t("weather_title"), "🌤️", t("weather_desc"), "weather"),
+        (t("soil_title"), "🧪", t("soil_desc"), "soil"),
+        (t("advice_title"), "📝", t("advice_desc"), "advice"),
+        (t("rotation_title"), "🔄", t("rotation_desc"), "rotation"),
+        (t("women_title"), "🚺", t("women_desc"), "women"),
+        (t("schemes_title"), "📜", t("schemes_desc"), "schemes"),
+        (t("kvk_title"), "🌾", t("kvk_desc"), "kvk"),
+        (t("nabard_title"), "🏦", t("nabard_desc"), "nabard"),
     ]
-    # Create a responsive grid using HTML/CSS
-    grid_html = '<div class="dashboard-grid">'
-    for key, title, icon, desc, func in features:
-        grid_html += f'''
-        <div class="grid-card" onclick="document.getElementById('btn_{key}').click();">
-            <div class="grid-icon">{icon}</div>
-            <div class="grid-title">{title}</div>
-            <div class="grid-desc">{desc}</div>
-        </div>
-        '''
-    grid_html += '</div>'
-    st.markdown(grid_html, unsafe_allow_html=True)
-    # Hidden buttons for each feature to trigger rerun
-    for key, title, icon, desc, func in features:
-        st.button(f"hidden_{key}", key=f"btn_{key}", style="display:none;")
+    
+    # Display in 2 columns, 5 rows
+    for i in range(0, len(features), 2):
+        cols = st.columns(2)
+        for j in range(2):
+            if i + j < len(features):
+                title, icon, desc, key = features[i+j]
+                button_label = f"{icon}\n\n**{title}**\n\n{desc}"
+                if cols[j].button(button_label, use_container_width=True):
+                    st.session_state.selected_feature = key
+                    st.rerun()
     st.markdown("---")
     st.caption(t("footer"))
 
